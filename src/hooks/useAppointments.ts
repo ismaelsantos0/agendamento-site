@@ -217,3 +217,12 @@ export function useTestWhatsApp() {
     }
   })
 }
+
+export function useTestConfirmationMessage() {
+  return useMutation({
+    mutationFn: async (payload: { telefone: string, msg_confirmation?: string }) => {
+      const { data } = await api.post<{ status: string, preview: string }>('/settings/test-confirmation', payload)
+      return data
+    }
+  })
+}

@@ -19,7 +19,8 @@ import {
   useUpdateAppointmentStatus,
   useWhatsAppStatus,
   useWhatsAppQR,
-  useTestWhatsApp
+  useTestWhatsApp,
+  useTestConfirmationMessage
 } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
@@ -89,10 +90,12 @@ export default function AdminDashboard() {
   const { data: wpStatus, refetch: refetchWpStatus } = useWhatsAppStatus()
   const generateQR = useWhatsAppQR()
   const testWp = useTestWhatsApp()
+  const testConfirmation = useTestConfirmationMessage()
   
   const [qrCodeData, setQrCodeData] = useState<string>('')
   const [testPhone, setTestPhone] = useState('')
   const [testMsg, setTestMsg] = useState('Teste de disparo pelo painel!')
+  const [testConfirmationPhone, setTestConfirmationPhone] = useState('')
   
   const [msgCreated, setMsgCreated] = useState('')
   const [msgConfirmation, setMsgConfirmation] = useState('')
@@ -515,6 +518,37 @@ export default function AdminDashboard() {
                   onChange={e => setMsgConfirmation(e.target.value)} 
                   placeholder="Olá {cliente}! Você tem um agendamento com {profissional} para {data}.\n\nResponda *1* para CONFIRMAR ou *2* para CANCELAR." 
                 />
+                <div className="mt-3 p-3 bg-green-50/50 rounded-lg border border-green-100 space-y-2">
+                  <p className="text-xs text-green-800 font-medium">Testar esta mensagem (usa dados de exemplo: João Silva, Dr. Carlos, amanhã às 14:30)</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="tel"
+                      placeholder="Nº WhatsApp (Ex: 5511999999999)"
+                      className="input-field sm:w-1/3 text-sm"
+                      value={testConfirmationPhone}
+                      onChange={e => setTestConfirmationPhone(e.target.value.replace(/\D/g, ''))}
+                    />
+                    <button
+                      type="button"
+                      disabled={testConfirmation.isPending || !testConfirmationPhone}
+                      onClick={async () => {
+                        try {
+                          await testConfirmation.mutateAsync({
+                            telefone: testConfirmationPhone,
+                            msg_confirmation: msgConfirmation || undefined,
+                          })
+                          toast.success('Mensagem de confirmação enviada!')
+                        } catch {
+                          toast.error('Falha ao enviar. Verifique a conexão do WhatsApp.')
+                        }
+                      }}
+                      className="bg-green-600 text-white rounded-xl px-4 py-2 text-sm font-bold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      {testConfirmation.isPending ? 'Enviando...' : 'Enviar teste de confirmação'}
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <button disabled={updateSettings.isPending} type="submit" className="btn-primary py-3 text-sm mt-2">
