@@ -6,9 +6,7 @@ export const queryKeys = {
   professionals: ['professionals'] as const,
   availability: (professionalId?: string) => professionalId ? ['availability', professionalId] as const : ['availability'] as const,
   appointments: (professionalId?: string, startDate?: string, endDate?: string) => {
-    if (professionalId && startDate && endDate) return ['appointments', professionalId, startDate, endDate] as const
-    if (professionalId) return ['appointments', professionalId] as const
-    return ['appointments'] as const
+    return ['appointments', professionalId, startDate, endDate].filter(Boolean) as string[]
   },
   settings: ['settings'] as const,
   blockouts: (professionalId?: string) => professionalId ? ['blockouts', professionalId] as const : ['blockouts'] as const,
