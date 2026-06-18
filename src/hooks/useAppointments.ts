@@ -78,6 +78,19 @@ export function useCreateAppointment() {
   })
 }
 
+export function useUpdateAppointmentStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, status, notes }: { id: string, status: string, notes?: string }) => {
+      const { data } = await api.patch<Appointment>(`/appointments/${id}/status`, { status, notes })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.appointments() })
+    },
+  })
+}
+
 export function useCreateProfessional() {
   const queryClient = useQueryClient()
   return useMutation({

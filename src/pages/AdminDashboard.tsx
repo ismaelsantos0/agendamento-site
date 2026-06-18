@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -16,7 +16,8 @@ import {
   useBlockouts,
   useCreateBlockout,
   useDeleteBlockout,
-  useAvailability
+  useAvailability,
+  useUpdateAppointmentStatus
 } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
@@ -51,6 +52,12 @@ export default function AdminDashboard() {
   const [showSettingsForm, setShowSettingsForm] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState('60')
 
+  const [showAppointmentsTab, setShowAppointmentsTab] = useState(false)
+  const [cancelModalApptId, setCancelModalApptId] = useState<string | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+
+  const updateAppointmentStatus = useUpdateAppointmentStatus()
+
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
     if (settings) {
@@ -67,11 +74,26 @@ export default function AdminDashboard() {
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      await api.patch(`/appointments/${id}/status`, { status })
-      toast.success('Status atualizado!')
-      refetch()
+      await updateAppointmentStatus.mutateAsync({ id, status })
+      toast.success('Agendamento confirmado!')
     } catch {
-      toast.error('Erro ao atualizar.')
+      toast.error('Erro ao confirmar agendamento.')
+    }
+  }
+
+  const handleCancelConfirm = async () => {
+    if (!cancelModalApptId) return
+    if (!cancelReason.trim()) {
+      toast.error('Informe o motivo do cancelamento.')
+      return
+    }
+    try {
+      await updateAppointmentStatus.mutateAsync({ id: cancelModalApptId, status: 'cancelled', notes: cancelReason })
+      toast.success('Agendamento cancelado!')
+      setCancelModalApptId(null)
+      setCancelReason('')
+    } catch {
+      toast.error('Erro ao cancelar agendamento.')
     }
   }
 
@@ -184,18 +206,22 @@ export default function AdminDashboard() {
 
       <main className="px-5 py-6 space-y-6">
         
-        {/* Sessão: Cadastro Rápido */}
+        {/* Sessão: Abas Principais */}
         <section className="flex flex-wrap gap-2">
-          <button onClick={() => { setShowProfForm(!showProfForm); setShowRuleForm(false); setShowSettingsForm(false); }} className="flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-primary font-medium text-sm active:scale-95 transition-all">
-            <UserPlus className="w-6 h-6 mb-2" />
-            Novo Especialista
+          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <CalendarCheck className={`w-6 h-6 mb-2 ${showAppointmentsTab ? 'text-primary' : 'text-gray-500'}`} />
+            Agendamentos
           </button>
-          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowProfForm(false); setShowSettingsForm(false); }} className="flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-secondary-dark font-medium text-sm active:scale-95 transition-all">
-            <Clock className="w-6 h-6 mb-2 text-secondary-DEFAULT" />
-            Adicionar Horário
+          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
+            Especialista
           </button>
-          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowProfForm(false); setShowRuleForm(false); }} className="flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-gray-700 font-medium text-sm active:scale-95 transition-all">
-            <Settings className="w-6 h-6 mb-2 text-gray-500" />
+          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
+            Horários
+          </button>
+          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
             Configurações
           </button>
         </section>
@@ -331,46 +357,94 @@ export default function AdminDashboard() {
           </form>
         )}
 
-        <div className="w-full h-[1px] bg-gray-200 my-4" />
+        {/* Aba de Agendamentos */}
+        {showAppointmentsTab && (
+          <section className="space-y-4 animate-fade-in">
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <CalendarCheck className="w-4 h-4" />
+              Gestão de Agendamentos
+            </h2>
+            
+            {appointments.length === 0 && (
+              <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-gray-100 shadow-sm">Nenhum agendamento encontrado.</p>
+            )}
 
-        {/* Sessão: Próximos Agendamentos */}
-        <section className="space-y-4">
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Próximos Agendamentos</h2>
-          
-          {appointments.length === 0 && (
-            <p className="text-center text-gray-400 py-10">Nenhum agendamento encontrado.</p>
-          )}
+            <div className="grid gap-4">
+              {appointments.map(appt => (
+                <div key={appt.id} className="card border-l-4 border-l-primary flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-gray-900">{appt.customer_name}</h3>
+                      <p className="text-xs font-semibold text-gray-500 mt-0.5">com {appt.professional_name}</p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : appt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {appt.status}
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm font-medium text-primary bg-primary/5 px-3 py-2 rounded-lg inline-block w-fit">
+                    {format(parseISO(appt.start_time), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                  </div>
 
-          {appointments.map(appt => (
-            <div key={appt.id} className="card border-l-4 border-l-primary flex flex-col gap-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-gray-900">{appt.customer_name}</h3>
-                  <p className="text-xs font-semibold text-gray-500 mt-0.5">com {appt.professional_name}</p>
+                  {appt.notes && (
+                    <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100 mt-1 whitespace-pre-wrap">
+                      <span className="font-bold">Observações/Motivo:</span> {appt.notes}
+                    </div>
+                  )}
+
+                  {appt.status === 'pending' && (
+                    <div className="flex gap-2 pt-2 border-t border-gray-50 mt-1">
+                      <button onClick={() => handleStatusChange(appt.id, 'confirmed')} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-green-100">
+                        <CheckCircle className="w-4 h-4"/> Confirmar
+                      </button>
+                      <button onClick={() => setCancelModalApptId(appt.id)} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-red-100">
+                        <XCircle className="w-4 h-4"/> Cancelar
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : appt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {appt.status}
-                </span>
-              </div>
-              
-              <div className="text-sm font-medium text-primary bg-primary/5 px-3 py-2 rounded-lg inline-block w-fit">
-                {format(parseISO(appt.start_time), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
-              </div>
-
-              {appt.status === 'pending' && (
-                <div className="flex gap-2 pt-2 border-t border-gray-50 mt-1">
-                  <button onClick={() => handleStatusChange(appt.id, 'confirmed')} className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold active:scale-95 transition-all">
-                    <CheckCircle className="w-4 h-4"/> Confirmar
-                  </button>
-                  <button onClick={() => handleStatusChange(appt.id, 'cancelled')} className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-bold active:scale-95 transition-all">
-                    <XCircle className="w-4 h-4"/> Cancelar
-                  </button>
-                </div>
-              )}
+              ))}
             </div>
-          ))}
-        </section>
+          </section>
+        )}
+
       </main>
+
+      {/* Modal de Cancelamento */}
+      {cancelModalApptId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-xl">
+            <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              Cancelar Agendamento
+            </h3>
+            <p className="text-sm text-gray-600">
+              Por favor, informe o motivo do cancelamento. Essa informação ficará salva no registro da consulta.
+            </p>
+            <textarea
+              className="input-field min-h-[100px] resize-none"
+              placeholder="Digite o motivo do cancelamento..."
+              value={cancelReason}
+              onChange={e => setCancelReason(e.target.value)}
+            />
+            <div className="flex gap-2 pt-2">
+              <button 
+                onClick={() => { setCancelModalApptId(null); setCancelReason(''); }}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-200 transition-colors"
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={handleCancelConfirm}
+                disabled={!cancelReason.trim() || updateAppointmentStatus.isPending}
+                className="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updateAppointmentStatus.isPending ? 'Aguarde...' : 'Confirmar Cancelamento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
