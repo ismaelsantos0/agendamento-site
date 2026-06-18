@@ -22,6 +22,8 @@ import {
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [filterPeriod, setFilterPeriod] = useState<'hoje' | 'semana' | 'mes' | 'todos'>('hoje')
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [filterProfessional, setFilterProfessional] = useState<string>('')
   
   let startDate: string | undefined = undefined
   let endDate: string | undefined = undefined
@@ -38,7 +40,12 @@ export default function AdminDashboard() {
     endDate = format(endOfMonth(now), 'yyyy-MM-dd')
   }
 
-  const { data: appointments = [] } = useAppointments(undefined, startDate, endDate)
+  const { data: appointments = [] } = useAppointments(
+    filterProfessional || undefined, 
+    startDate, 
+    endDate, 
+    filterStatus || undefined
+  )
   const { data: professionals = [] } = useProfessionals()
   const createProf = useCreateProfessional()
   const createRule = useCreateAvailabilityRule()
@@ -382,11 +389,32 @@ export default function AdminDashboard() {
                 Gestão de Agendamentos
               </h2>
               
-              <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto">
+              <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
                 <button onClick={() => setFilterPeriod('hoje')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'hoje' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Hoje</button>
                 <button onClick={() => setFilterPeriod('semana')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'semana' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Semana</button>
                 <button onClick={() => setFilterPeriod('mes')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'mes' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Mês</button>
                 <button onClick={() => setFilterPeriod('todos')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'todos' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Todos</button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex-1">
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Status</label>
+                <select className="input-field py-1.5 text-sm" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                  <option value="">Todos os status</option>
+                  <option value="pending">Apenas Pendentes</option>
+                  <option value="confirmed">Apenas Confirmados</option>
+                  <option value="cancelled">Apenas Cancelados</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Especialista</label>
+                <select className="input-field py-1.5 text-sm" value={filterProfessional} onChange={e => setFilterProfessional(e.target.value)}>
+                  <option value="">Todos os especialistas</option>
+                  {professionals.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             
