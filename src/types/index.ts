@@ -38,3 +38,18 @@ export interface ClinicSettings {
   id: string
   appointment_duration_minutes: number
 }
+
+export interface Blockout {
+  id: string
+  professional_id: string
+  date: string
+  start_time: string
+  end_time: string
+}
+
+export interface CreateBlockoutPayload {
+  professional_id: string
+  date: string
+  start_time: string
+  end_time: string
+}

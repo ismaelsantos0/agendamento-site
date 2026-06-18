@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
-import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings } from '../hooks/useAppointments'
+import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts } from '../hooks/useAppointments'
 import { CreateAppointmentPayload } from '../types'
 
 export default function PublicBooking() {
@@ -25,9 +25,8 @@ export default function PublicBooking() {
   const selectedProf = professionals.find(p => p.id === selectedProfId)
   
   const { data: rules = [] } = useAvailability(selectedProfId)
+  const { data: blockouts = [] } = useBlockouts(selectedProfId)
   
-  // Para evitar chamadas de rede desnecessárias, podemos buscar os agendamentos da semana toda,
-  // mas como a API busca por dia, vamos simplificar e buscar do dia selecionado.
   const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined
   const { data: dayAppointments = [] } = useAppointments(selectedProfId, dateStr)
 
@@ -60,11 +59,19 @@ export default function PublicBooking() {
         return slotStart < parseISO(appt.end_time) && slotEnd > parseISO(appt.start_time)
       })
 
-      if (!hasConflict) slots.push(format(currentSlot, 'HH:mm'))
+      const selectedDateString = format(selectedDate, 'yyyy-MM-dd')
+      const hasBlockout = blockouts.some(b => {
+        if (b.date !== selectedDateString) return false
+        const bStart = setMinutes(setHours(selectedDate, parseInt(b.start_time.split(':')[0])), parseInt(b.start_time.split(':')[1]))
+        const bEnd = setMinutes(setHours(selectedDate, parseInt(b.end_time.split(':')[0])), parseInt(b.end_time.split(':')[1]))
+        return slotStart < bEnd && slotEnd > bStart
+      })
+
+      if (!hasConflict && !hasBlockout) slots.push(format(currentSlot, 'HH:mm'))
       currentSlot = addMinutes(currentSlot, duration)
     }
     return slots
-  }, [selectedDate, selectedProfId, rules, dayAppointments, settings])
+  }, [selectedDate, selectedProfId, rules, dayAppointments, settings, blockouts])
 
   const onSubmit = async (values: CreateAppointmentPayload) => {
     if (!selectedDate || !selectedTime) {

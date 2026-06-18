@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
-import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, ClinicSettings } from '../types'
+import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, ClinicSettings, Blockout, CreateBlockoutPayload } from '../types'
 
 export const queryKeys = {
   professionals: ['professionals'] as const,
   availability: (professionalId?: string) => ['availability', professionalId] as const,
   appointments: (professionalId?: string, date?: string) => ['appointments', professionalId, date] as const,
   settings: ['settings'] as const,
+  blockouts: (professionalId?: string) => ['blockouts', professionalId] as const,
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────
@@ -108,6 +109,58 @@ export function useUpdateSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings })
+    },
+  })
+}
+
+// ─── Blockouts & Exclusão de Regras ──────────────────────────────────────
+
+export function useDeleteAvailabilityRule() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (ruleId: string) => {
+      await api.delete(`/availability/${ruleId}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.availability() })
+    },
+  })
+}
+
+export function useBlockouts(professionalId?: string) {
+  return useQuery({
+    queryKey: [...queryKeys.blockouts(), { professionalId }],
+    queryFn: async () => {
+      const { data } = await api.get<Blockout[]>('/blockouts', {
+        params: { professional_id: professionalId }
+      })
+      return data
+    },
+    enabled: !!professionalId,
+  })
+}
+
+export function useCreateBlockout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: CreateBlockoutPayload) => {
+      const { data } = await api.post<Blockout>('/blockouts', payload)
+      return data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.blockouts(), { professionalId: variables.professional_id }] })
+    },
+  })
+}
+
+export function useDeleteBlockout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (blockoutId: string) => {
+      await api.delete(`/blockouts/${blockoutId}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.blockouts() })
     },
   })
 }
