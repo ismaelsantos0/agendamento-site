@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -16,7 +16,10 @@ import {
   useCreateBlockout,
   useDeleteBlockout,
   useAvailability,
-  useUpdateAppointmentStatus
+  useUpdateAppointmentStatus,
+  useWhatsAppStatus,
+  useWhatsAppQR,
+  useTestWhatsApp
 } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
@@ -81,10 +84,25 @@ export default function AdminDashboard() {
 
   const updateAppointmentStatus = useUpdateAppointmentStatus()
 
+  // Estados do WhatsApp
+  const [showWhatsAppTab, setShowWhatsAppTab] = useState(false)
+  const { data: wpStatus, refetch: refetchWpStatus } = useWhatsAppStatus()
+  const generateQR = useWhatsAppQR()
+  const testWp = useTestWhatsApp()
+  
+  const [qrCodeData, setQrCodeData] = useState<string>('')
+  const [testPhone, setTestPhone] = useState('')
+  const [testMsg, setTestMsg] = useState('Teste de disparo pelo painel!')
+  
+  const [msgCreated, setMsgCreated] = useState('')
+  const [msgConfirmation, setMsgConfirmation] = useState('')
+
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
     if (settings) {
       setDurationMinutes(settings.appointment_duration_minutes.toString())
+      setMsgCreated(settings.msg_created || '')
+      setMsgConfirmation(settings.msg_confirmation || '')
     }
   }, [settings])
 
@@ -198,9 +216,14 @@ export default function AdminDashboard() {
       return
     }
     try {
-      await updateSettings.mutateAsync({ appointment_duration_minutes: minutes })
+      await updateSettings.mutateAsync({ 
+        appointment_duration_minutes: minutes,
+        msg_created: msgCreated.trim() || undefined,
+        msg_confirmation: msgConfirmation.trim() || undefined
+      })
       toast.success('Configurações salvas!')
       setShowSettingsForm(false)
+      setShowWhatsAppTab(false)
     } catch {
       toast.error('Erro ao salvar configurações.')
     }
@@ -231,19 +254,23 @@ export default function AdminDashboard() {
         
         {/* Sessão: Abas Principais */}
         <section className="flex flex-wrap gap-2">
-          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <CalendarCheck className={`w-6 h-6 mb-2 ${showAppointmentsTab ? 'text-primary' : 'text-gray-500'}`} />
             Agendamentos
           </button>
-          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
             Especialista
           </button>
-          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
             Horários
           </button>
-          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowWhatsAppTab(!showWhatsAppTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showWhatsAppTab ? 'bg-green-50 border-green-500 text-green-600' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <MessageCircle className={`w-6 h-6 mb-2 ${showWhatsAppTab ? 'text-green-600' : 'text-gray-500'}`} />
+            WhatsApp
+          </button>
+          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
             Configurações
           </button>
@@ -378,6 +405,123 @@ export default function AdminDashboard() {
               {updateSettings.isPending ? 'Salvando...' : 'Salvar Configuração'}
             </button>
           </form>
+        )}
+
+        {/* Aba: WhatsApp */}
+        {showWhatsAppTab && (
+          <div className="space-y-6 animate-fade-in">
+            {/* Status */}
+            <div className="card flex items-center justify-between border-2 border-green-500/20 shadow-green-500/5 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className={`w-3 h-3 rounded-full ${wpStatus?.status === 'open' ? 'bg-green-500' : 'bg-red-500 animate-pulse shadow-red-500 shadow-sm'}`} />
+                <h3 className="font-bold text-gray-800">Status da Conexão: <span className={`uppercase ${wpStatus?.status === 'open' ? 'text-green-600' : 'text-red-500'}`}>{wpStatus?.status || 'Carregando...'}</span></h3>
+              </div>
+              <button onClick={() => refetchWpStatus()} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" title="Atualizar Status"><RefreshCw className="w-4 h-4 text-gray-600" /></button>
+            </div>
+            
+            {/* QR Code */}
+            {wpStatus?.status !== 'open' && (
+              <div className="card text-center space-y-4">
+                <h3 className="font-bold text-gray-800 text-sm">Conectar Dispositivo</h3>
+                <p className="text-xs text-gray-500">Seu WhatsApp está desconectado. Gere um novo QR Code para ler no celular da clínica.</p>
+                {qrCodeData ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <img src={qrCodeData} alt="QR Code" className="w-64 h-64 border-4 border-gray-100 rounded-2xl shadow-sm" />
+                    <button 
+                      onClick={async () => {
+                        try {
+                          const b64 = await generateQR.mutateAsync()
+                          setQrCodeData(b64 || '')
+                        } catch (err: any) {
+                          toast.error('Erro ao gerar QR Code: ' + err.message)
+                        }
+                      }}
+                      disabled={generateQR.isPending}
+                      className="text-xs text-gray-500 underline"
+                    >
+                      {generateQR.isPending ? 'Atualizando...' : 'O QR Code expirou? Gerar de novo'}
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const b64 = await generateQR.mutateAsync()
+                        setQrCodeData(b64 || '')
+                      } catch (err: any) {
+                        toast.error('Erro ao gerar QR Code: ' + err.message)
+                      }
+                    }}
+                    disabled={generateQR.isPending}
+                    className="btn-primary max-w-[200px] mx-auto"
+                  >
+                    {generateQR.isPending ? 'Carregando...' : 'Gerar QR Code'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Testes */}
+            <div className="card space-y-4">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2"><Send className="w-4 h-4 text-green-600" /> Teste Rápido de Mensagem</h3>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input type="tel" placeholder="Nº (Ex: 5511999999999)" className="input-field sm:w-1/3" value={testPhone} onChange={e => setTestPhone(e.target.value.replace(/\D/g, ''))} />
+                <input placeholder="Mensagem de teste..." className="input-field flex-1" value={testMsg} onChange={e => setTestMsg(e.target.value)} />
+                <button 
+                  disabled={testWp.isPending || !testPhone || !testMsg} 
+                  onClick={async () => {
+                    try {
+                      await testWp.mutateAsync({ telefone: testPhone, texto: testMsg })
+                      toast.success('Enviado!')
+                    } catch {
+                      toast.error('Falha ao enviar.')
+                    }
+                  }}
+                  className="bg-green-600 text-white rounded-xl px-4 py-2 text-sm font-bold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+                >
+                  {testWp.isPending ? '...' : 'Enviar'}
+                </button>
+              </div>
+            </div>
+
+            {/* Mensagens Personalizadas */}
+            <form onSubmit={handleSaveSettings} className="card animate-fade-in space-y-4 border border-gray-200 bg-white">
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2"><MessageCircle className="w-4 h-4 text-primary" /> Personalização de Textos</h3>
+              
+              <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                <p className="text-xs text-blue-800 font-medium leading-relaxed">
+                  <strong>Dica de Variáveis:</strong> Você pode usar palavras-chave que serão substituídas automaticamente pelo robô:
+                  <br/>• <code>{"{cliente}"}</code> - Nome do paciente
+                  <br/>• <code>{"{profissional}"}</code> - Nome do especialista
+                  <br/>• <code>{"{data}"}</code> - Ex: "15/10/2026 às 14:30"
+                </p>
+              </div>
+              
+              <div>
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Mensagem de Boas Vindas (Disparo Imediato)</label>
+                <textarea 
+                  className="input-field min-h-[100px] resize-y text-sm font-medium text-gray-700" 
+                  value={msgCreated} 
+                  onChange={e => setMsgCreated(e.target.value)} 
+                  placeholder="Olá {cliente}! 📅 Seu agendamento com {profissional} para {data} foi registrado com sucesso!\n\n⏳ Nós enviaremos uma mensagem de confirmação 2 horas antes da consulta." 
+                />
+              </div>
+              
+              <div>
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Mensagem de Confirmação (2 horas antes)</label>
+                <textarea 
+                  className="input-field min-h-[100px] resize-y text-sm font-medium text-gray-700" 
+                  value={msgConfirmation} 
+                  onChange={e => setMsgConfirmation(e.target.value)} 
+                  placeholder="Olá {cliente}! Você tem um agendamento com {profissional} para {data}.\n\nResponda *1* para CONFIRMAR ou *2* para CANCELAR." 
+                />
+              </div>
+
+              <button disabled={updateSettings.isPending} type="submit" className="btn-primary py-3 text-sm mt-2">
+                {updateSettings.isPending ? 'Salvando...' : 'Salvar Textos Personalizados'}
+              </button>
+            </form>
+          </div>
         )}
 
         {/* Aba de Agendamentos */}

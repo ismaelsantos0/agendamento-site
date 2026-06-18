@@ -37,6 +37,8 @@ export interface CreateAppointmentPayload {
 export interface ClinicSettings {
   id: string
   appointment_duration_minutes: number
+  msg_created?: string
+  msg_confirmation?: string
 }
 
 export interface Blockout {

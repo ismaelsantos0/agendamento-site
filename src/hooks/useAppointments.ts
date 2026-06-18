@@ -181,3 +181,39 @@ export function useDeleteBlockout() {
     },
   })
 }
+
+// ─── WhatsApp Management ──────────────────────────────────────────────────
+
+export const whatsappKeys = {
+  status: ['whatsapp', 'status'] as const,
+}
+
+export function useWhatsAppStatus() {
+  return useQuery({
+    queryKey: whatsappKeys.status,
+    queryFn: async () => {
+      const { data } = await api.get<{status: string}>('/whatsapp/status')
+      return data
+    },
+    refetchInterval: 5000, // Poll a cada 5 segundos
+  })
+}
+
+export function useWhatsAppQR() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.get<{base64?: string, error?: string}>('/whatsapp/qr')
+      if (data.error) throw new Error(data.error)
+      return data.base64
+    }
+  })
+}
+
+export function useTestWhatsApp() {
+  return useMutation({
+    mutationFn: async (payload: {telefone: string, texto: string}) => {
+      const { data } = await api.post('/whatsapp/test', payload)
+      return data
+    }
+  })
+}
