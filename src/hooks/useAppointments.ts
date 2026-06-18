@@ -4,10 +4,14 @@ import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, 
 
 export const queryKeys = {
   professionals: ['professionals'] as const,
-  availability: (professionalId?: string) => ['availability', professionalId] as const,
-  appointments: (professionalId?: string, date?: string) => ['appointments', professionalId, date] as const,
+  availability: (professionalId?: string) => professionalId ? ['availability', professionalId] as const : ['availability'] as const,
+  appointments: (professionalId?: string, date?: string) => {
+    if (professionalId && date) return ['appointments', professionalId, date] as const
+    if (professionalId) return ['appointments', professionalId] as const
+    return ['appointments'] as const
+  },
   settings: ['settings'] as const,
-  blockouts: (professionalId?: string) => ['blockouts', professionalId] as const,
+  blockouts: (professionalId?: string) => professionalId ? ['blockouts', professionalId] as const : ['blockouts'] as const,
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────
@@ -24,7 +28,7 @@ export function useProfessionals() {
 
 export function useAvailability(professionalId?: string) {
   return useQuery({
-    queryKey: [...queryKeys.availability(), { professionalId }],
+    queryKey: queryKeys.availability(professionalId),
     queryFn: async () => {
       const { data } = await api.get<AvailabilityRule[]>('/availability', {
         params: { professional_id: professionalId }
@@ -37,7 +41,7 @@ export function useAvailability(professionalId?: string) {
 
 export function useAppointments(professionalId?: string, date?: string) {
   return useQuery({
-    queryKey: [...queryKeys.appointments(), { professionalId, date }],
+    queryKey: queryKeys.appointments(professionalId, date),
     queryFn: async () => {
       const params: any = {}
       if (professionalId) params.professional_id = professionalId
@@ -95,7 +99,7 @@ export function useCreateAvailabilityRule() {
       return data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.availability(), { professionalId: variables.professional_id }] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.availability(variables.professional_id) })
     },
   })
 }
@@ -129,7 +133,7 @@ export function useDeleteAvailabilityRule() {
 
 export function useBlockouts(professionalId?: string) {
   return useQuery({
-    queryKey: [...queryKeys.blockouts(), { professionalId }],
+    queryKey: queryKeys.blockouts(professionalId),
     queryFn: async () => {
       const { data } = await api.get<Blockout[]>('/blockouts', {
         params: { professional_id: professionalId }
@@ -148,7 +152,7 @@ export function useCreateBlockout() {
       return data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.blockouts(), { professionalId: variables.professional_id }] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.blockouts(variables.professional_id) })
     },
   })
 }
