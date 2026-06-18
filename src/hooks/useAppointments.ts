@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
-import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload } from '../types'
+import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, ClinicSettings } from '../types'
 
 export const queryKeys = {
   professionals: ['professionals'] as const,
-  availability: ['availability'] as const,
-  appointments: ['appointments'] as const,
+  availability: (professionalId?: string) => ['availability', professionalId] as const,
+  appointments: (professionalId?: string, date?: string) => ['appointments', professionalId, date] as const,
+  settings: ['settings'] as const,
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────
@@ -22,7 +23,7 @@ export function useProfessionals() {
 
 export function useAvailability(professionalId?: string) {
   return useQuery({
-    queryKey: [...queryKeys.availability, { professionalId }],
+    queryKey: [...queryKeys.availability(), { professionalId }],
     queryFn: async () => {
       const { data } = await api.get<AvailabilityRule[]>('/availability', {
         params: { professional_id: professionalId }
@@ -35,13 +36,23 @@ export function useAvailability(professionalId?: string) {
 
 export function useAppointments(professionalId?: string, date?: string) {
   return useQuery({
-    queryKey: [...queryKeys.appointments, { professionalId, date }],
+    queryKey: [...queryKeys.appointments(), { professionalId, date }],
     queryFn: async () => {
       const params: any = {}
       if (professionalId) params.professional_id = professionalId
       if (date) params.date = date
       
       const { data } = await api.get<Appointment[]>('/appointments', { params })
+      return data
+    },
+  })
+}
+
+export function useSettings() {
+  return useQuery({
+    queryKey: queryKeys.settings,
+    queryFn: async () => {
+      const { data } = await api.get<ClinicSettings>('/settings')
       return data
     },
   })
@@ -57,7 +68,7 @@ export function useCreateAppointment() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
+      queryClient.invalidateQueries({ queryKey: queryKeys.appointments() })
     },
   })
 }
@@ -83,7 +94,20 @@ export function useCreateAvailabilityRule() {
       return data
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.availability, { professionalId: variables.professional_id }] })
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.availability(), { professionalId: variables.professional_id }] })
+    },
+  })
+}
+
+export function useUpdateSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: { appointment_duration_minutes: number }) => {
+      const { data } = await api.put<ClinicSettings>('/settings', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings })
     },
   })
 }

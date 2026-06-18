@@ -7,11 +7,12 @@ import toast from 'react-hot-toast'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
-import { useProfessionals, useAvailability, useAppointments, useCreateAppointment } from '../hooks/useAppointments'
+import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings } from '../hooks/useAppointments'
 import { CreateAppointmentPayload } from '../types'
 
 export default function PublicBooking() {
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals()
+  const { data: settings } = useSettings()
   const createAppointment = useCreateAppointment()
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
@@ -36,7 +37,7 @@ export default function PublicBooking() {
     return Array.from({ length: 7 }).map((_, i) => addDays(today, i))
   }, [])
 
-  // ─── Lógica de Slots Fixos de 1h ──────────────────────────────────────────
+  // ─── Lógica de Slots Fixos ──────────────────────────────────────────
   const timeSlots = useMemo(() => {
     if (!selectedDate || !selectedProfId) return []
     const rule = rules.find(r => r.day_of_week === selectedDate.getDay())
@@ -48,7 +49,7 @@ export default function PublicBooking() {
     
     let currentSlot = setMinutes(setHours(selectedDate, startH), startM)
     const endTime = setMinutes(setHours(selectedDate, endH), endM)
-    const duration = 60 // 1 hora fixa
+    const duration = settings?.appointment_duration_minutes || 60 // Duração dinâmica
 
     while (addMinutes(currentSlot, duration) <= endTime) {
       const slotStart = currentSlot
@@ -60,10 +61,10 @@ export default function PublicBooking() {
       })
 
       if (!hasConflict) slots.push(format(currentSlot, 'HH:mm'))
-      currentSlot = addMinutes(currentSlot, duration) // Pula 1h
+      currentSlot = addMinutes(currentSlot, duration)
     }
     return slots
-  }, [selectedDate, selectedProfId, rules, dayAppointments])
+  }, [selectedDate, selectedProfId, rules, dayAppointments, settings])
 
   const onSubmit = async (values: CreateAppointmentPayload) => {
     if (!selectedDate || !selectedTime) {
@@ -110,7 +111,7 @@ export default function PublicBooking() {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Clínica Vida</h1>
-            <p className="text-white/80 text-sm">Agende sua consulta (1h)</p>
+            <p className="text-white/80 text-sm">Agende sua consulta ({settings?.appointment_duration_minutes || 60}m)</p>
           </div>
         </div>
       </header>
@@ -186,7 +187,7 @@ export default function PublicBooking() {
               
               {selectedDate && (
                 <div className="pt-4 border-t border-gray-100">
-                  <h3 className="text-xs font-semibold text-gray-500 mb-3 flex items-center gap-1"><Clock className="w-3 h-3"/> Horários (1h)</h3>
+                  <h3 className="text-xs font-semibold text-gray-500 mb-3 flex items-center gap-1"><Clock className="w-3 h-3"/> Horários de {settings?.appointment_duration_minutes || 60}m</h3>
                   {timeSlots.length > 0 ? (
                     <div className="grid grid-cols-4 gap-2">
                       {timeSlots.map(slot => (
@@ -220,7 +221,7 @@ export default function PublicBooking() {
 
           <div className="pt-4">
             <button type="submit" disabled={createAppointment.isPending} className="btn-primary">
-              {createAppointment.isPending ? 'Enviando...' : 'Confirmar Agendamento de 1h'}
+              {createAppointment.isPending ? 'Enviando...' : `Confirmar Agendamento de ${settings?.appointment_duration_minutes || 60}m`}
             </button>
           </div>
         </form>

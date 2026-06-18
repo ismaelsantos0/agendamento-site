@@ -33,3 +33,8 @@ export interface CreateAppointmentPayload {
   start_time: string
   notes?: string
 }
+
+export interface ClinicSettings {
+  id: string
+  appointment_duration_minutes: number
+}

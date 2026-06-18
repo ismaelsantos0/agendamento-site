@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
 import { api } from '../api/client'
-import { useAppointments, useProfessionals, useCreateProfessional, useCreateAvailabilityRule } from '../hooks/useAppointments'
+import { useAppointments, useProfessionals, useCreateProfessional, useCreateAvailabilityRule, useSettings, useUpdateSettings } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -23,6 +23,18 @@ export default function AdminDashboard() {
   const [ruleDay, setRuleDay] = useState('1')
   const [ruleStart, setRuleStart] = useState('09:00')
   const [ruleEnd, setRuleEnd] = useState('18:00')
+
+  const { data: settings } = useSettings()
+  const updateSettings = useUpdateSettings()
+  const [showSettingsForm, setShowSettingsForm] = useState(false)
+  const [durationMinutes, setDurationMinutes] = useState('60')
+
+  // Atualiza input quando carregar settings do backend
+  useEffect(() => {
+    if (settings) {
+      setDurationMinutes(settings.appointment_duration_minutes.toString())
+    }
+  }, [settings])
 
   useEffect(() => {
     const token = localStorage.getItem('@agendamentos:token')
@@ -74,6 +86,22 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const minutes = parseInt(durationMinutes)
+    if (isNaN(minutes) || minutes < 5) {
+      toast.error('Duração inválida.')
+      return
+    }
+    try {
+      await updateSettings.mutateAsync({ appointment_duration_minutes: minutes })
+      toast.success('Configurações salvas!')
+      setShowSettingsForm(false)
+    } catch {
+      toast.error('Erro ao salvar configurações.')
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('@agendamentos:token')
     setIsAuthenticated(false)
@@ -98,14 +126,18 @@ export default function AdminDashboard() {
       <main className="px-5 py-6 space-y-6">
         
         {/* Sessão: Cadastro Rápido */}
-        <section className="flex gap-2">
-          <button onClick={() => setShowProfForm(!showProfForm)} className="flex-1 flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-primary font-medium text-sm active:scale-95 transition-all">
+        <section className="flex flex-wrap gap-2">
+          <button onClick={() => { setShowProfForm(!showProfForm); setShowRuleForm(false); setShowSettingsForm(false); }} className="flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-primary font-medium text-sm active:scale-95 transition-all">
             <UserPlus className="w-6 h-6 mb-2" />
             Novo Especialista
           </button>
-          <button onClick={() => setShowRuleForm(!showRuleForm)} className="flex-1 flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-secondary-dark font-medium text-sm active:scale-95 transition-all">
+          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowProfForm(false); setShowSettingsForm(false); }} className="flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-secondary-dark font-medium text-sm active:scale-95 transition-all">
             <Clock className="w-6 h-6 mb-2 text-secondary-DEFAULT" />
             Adicionar Horário
+          </button>
+          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowProfForm(false); setShowRuleForm(false); }} className="flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-gray-700 font-medium text-sm active:scale-95 transition-all">
+            <Settings className="w-6 h-6 mb-2 text-gray-500" />
+            Configurações
           </button>
         </section>
 
@@ -148,6 +180,31 @@ export default function AdminDashboard() {
             </div>
             <button disabled={createRule.isPending} type="submit" className="btn-primary py-2 text-xs mt-2">
               {createRule.isPending ? 'Salvando...' : 'Salvar Regra'}
+            </button>
+          </form>
+        )}
+
+        {/* Form: Configurações */}
+        {showSettingsForm && (
+          <form onSubmit={handleSaveSettings} className="card animate-fade-in space-y-3 border border-gray-200 bg-gray-50/50">
+            <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+              <Settings className="w-4 h-4 text-gray-500" />
+              Configurações Gerais
+            </h3>
+            <div>
+              <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Duração de cada Consulta (em minutos)</label>
+              <select className="input-field py-2" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)}>
+                <option value="15">15 Minutos</option>
+                <option value="20">20 Minutos</option>
+                <option value="30">30 Minutos</option>
+                <option value="45">45 Minutos</option>
+                <option value="60">1 Hora (60 min)</option>
+                <option value="90">1 Hora e meia (90 min)</option>
+                <option value="120">2 Horas (120 min)</option>
+              </select>
+            </div>
+            <button disabled={updateSettings.isPending} type="submit" className="btn-primary bg-gray-800 hover:bg-gray-900 py-2 text-xs mt-2">
+              {updateSettings.isPending ? 'Salvando...' : 'Salvar Configuração'}
             </button>
           </form>
         )}
