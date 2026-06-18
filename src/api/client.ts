@@ -16,3 +16,15 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+// Interceptor para deslogar caso o token tenha expirado (401)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('@agendamentos:token')
+      window.location.reload()
+    }
+    return Promise.reject(error)
+  }
+)
