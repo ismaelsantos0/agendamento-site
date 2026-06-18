@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
@@ -22,7 +22,24 @@ import {
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const { data: appointments = [], refetch } = useAppointments()
+  const [filterPeriod, setFilterPeriod] = useState<'hoje' | 'semana' | 'mes' | 'todos'>('hoje')
+  
+  let startDate: string | undefined = undefined
+  let endDate: string | undefined = undefined
+  const now = new Date()
+
+  if (filterPeriod === 'hoje') {
+    startDate = format(startOfDay(now), 'yyyy-MM-dd')
+    endDate = format(endOfDay(now), 'yyyy-MM-dd')
+  } else if (filterPeriod === 'semana') {
+    startDate = format(startOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
+    endDate = format(endOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
+  } else if (filterPeriod === 'mes') {
+    startDate = format(startOfMonth(now), 'yyyy-MM-dd')
+    endDate = format(endOfMonth(now), 'yyyy-MM-dd')
+  }
+
+  const { data: appointments = [], refetch } = useAppointments(undefined, startDate, endDate)
   const { data: professionals = [] } = useProfessionals()
   const createProf = useCreateProfessional()
   const createRule = useCreateAvailabilityRule()
@@ -360,10 +377,19 @@ export default function AdminDashboard() {
         {/* Aba de Agendamentos */}
         {showAppointmentsTab && (
           <section className="space-y-4 animate-fade-in">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <CalendarCheck className="w-4 h-4" />
-              Gestão de Agendamentos
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4" />
+                Gestão de Agendamentos
+              </h2>
+              
+              <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto">
+                <button onClick={() => setFilterPeriod('hoje')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'hoje' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Hoje</button>
+                <button onClick={() => setFilterPeriod('semana')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'semana' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Semana</button>
+                <button onClick={() => setFilterPeriod('mes')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'mes' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Mês</button>
+                <button onClick={() => setFilterPeriod('todos')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'todos' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Todos</button>
+              </div>
+            </div>
             
             {appointments.length === 0 && (
               <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-gray-100 shadow-sm">Nenhum agendamento encontrado.</p>

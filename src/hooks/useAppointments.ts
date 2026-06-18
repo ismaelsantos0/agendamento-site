@@ -5,8 +5,8 @@ import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, 
 export const queryKeys = {
   professionals: ['professionals'] as const,
   availability: (professionalId?: string) => professionalId ? ['availability', professionalId] as const : ['availability'] as const,
-  appointments: (professionalId?: string, date?: string) => {
-    if (professionalId && date) return ['appointments', professionalId, date] as const
+  appointments: (professionalId?: string, startDate?: string, endDate?: string) => {
+    if (professionalId && startDate && endDate) return ['appointments', professionalId, startDate, endDate] as const
     if (professionalId) return ['appointments', professionalId] as const
     return ['appointments'] as const
   },
@@ -39,13 +39,14 @@ export function useAvailability(professionalId?: string) {
   })
 }
 
-export function useAppointments(professionalId?: string, date?: string) {
+export function useAppointments(professionalId?: string, startDate?: string, endDate?: string) {
   return useQuery({
-    queryKey: queryKeys.appointments(professionalId, date),
+    queryKey: queryKeys.appointments(professionalId, startDate, endDate),
     queryFn: async () => {
       const params: any = {}
       if (professionalId) params.professional_id = professionalId
-      if (date) params.date = date
+      if (startDate) params.start_date = startDate
+      if (endDate) params.end_date = endDate
       
       const { data } = await api.get<Appointment[]>('/appointments', { params })
       return data
