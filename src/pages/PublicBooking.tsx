@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { format, addMinutes, setHours, setMinutes, parseISO, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -20,9 +20,26 @@ export default function PublicBooking() {
   const [showMonthView, setShowMonthView] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const { register, handleSubmit, watch, reset } = useForm<CreateAppointmentPayload>()
+  const { register, handleSubmit, watch, reset, setValue } = useForm<CreateAppointmentPayload>()
   const selectedProfId = watch('professional_id')
+  const phoneValue = watch('customer_phone')
   const selectedProf = professionals.find(p => p.id === selectedProfId)
+
+  useEffect(() => {
+    if (phoneValue) {
+      let v = phoneValue.replace(/\D/g, '')
+      if (!v.startsWith('55') && v.length > 0) v = '55' + v
+      
+      let masked = v
+      if (v.length > 2 && v.length <= 4) masked = `${v.slice(0,2)} (${v.slice(2)})`
+      else if (v.length > 4 && v.length <= 9) masked = `${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4)}`
+      else if (v.length > 9) masked = `${v.slice(0,2)} (${v.slice(2,4)}) ${v.slice(4,9)}-${v.slice(9,13)}`
+      
+      if (masked !== phoneValue) {
+        setValue('customer_phone', masked)
+      }
+    }
+  }, [phoneValue, setValue])
   
   const { data: rules = [] } = useAvailability(selectedProfId)
   const { data: blockouts = [] } = useBlockouts(selectedProfId)
@@ -85,6 +102,7 @@ export default function PublicBooking() {
     try {
       await createAppointment.mutateAsync({
         ...values,
+        customer_phone: values.customer_phone.replace(/\D/g, ''),
         start_time: startDt.toISOString()
       })
       setSubmitted(true)
@@ -222,7 +240,7 @@ export default function PublicBooking() {
             <input placeholder="Nome completo" className="input-field" {...register('customer_name', { required: true })} />
             <div className="relative">
               <Phone className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input type="tel" placeholder="Seu WhatsApp" className="input-field pl-11" {...register('customer_phone', { required: true })} />
+              <input type="tel" placeholder="55 (XX) XXXXX-XXXX" className="input-field pl-11" {...register('customer_phone', { required: true, minLength: 18, maxLength: 19 })} />
             </div>
           </div>
 
