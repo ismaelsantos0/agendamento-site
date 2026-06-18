@@ -4,7 +4,6 @@ import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOf
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
-import { api } from '../api/client'
 import { 
   useAppointments, 
   useProfessionals, 
@@ -39,7 +38,7 @@ export default function AdminDashboard() {
     endDate = format(endOfMonth(now), 'yyyy-MM-dd')
   }
 
-  const { data: appointments = [], refetch } = useAppointments(undefined, startDate, endDate)
+  const { data: appointments = [] } = useAppointments(undefined, startDate, endDate)
   const { data: professionals = [] } = useProfessionals()
   const createProf = useCreateProfessional()
   const createRule = useCreateAvailabilityRule()
