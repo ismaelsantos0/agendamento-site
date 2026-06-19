@@ -4,6 +4,7 @@ import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOf
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
+import { Appointment } from '../types'
 import { 
   useAppointments, 
   useProfessionals, 
