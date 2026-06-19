@@ -578,8 +578,9 @@ export default function AdminDashboard() {
                           setTestConfirmationApptId(result.appointment_id)
                           setAwaitingConfirmationReply(true)
                           toast.success('Mensagem enviada! Responda 1 ou 2 no WhatsApp.')
-                        } catch {
-                          toast.error('Falha ao enviar. Verifique a conexão do WhatsApp.')
+                        } catch (err: any) {
+                          const errMsg = err.response?.data?.detail || 'Falha ao enviar. Verifique a conexão do WhatsApp.'
+                          toast.error(errMsg)
                         }
                       }}
                       className="bg-green-600 text-white rounded-xl px-4 py-2 text-sm font-bold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
