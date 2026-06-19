@@ -20,7 +20,8 @@ import {
   useWhatsAppStatus,
   useWhatsAppQR,
   useTestWhatsApp,
-  useTestConfirmationMessage
+  useTestConfirmationMessage,
+  useAppointmentById
 } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
@@ -91,6 +92,9 @@ export default function AdminDashboard() {
   const generateQR = useWhatsAppQR()
   const testWp = useTestWhatsApp()
   const testConfirmation = useTestConfirmationMessage()
+  const [awaitingConfirmationReply, setAwaitingConfirmationReply] = useState(false)
+  const [testConfirmationApptId, setTestConfirmationApptId] = useState<string | null>(null)
+  const { data: testConfirmationAppt } = useAppointmentById(testConfirmationApptId, awaitingConfirmationReply)
   
   const [qrCodeData, setQrCodeData] = useState<string>('')
   const [testPhone, setTestPhone] = useState('')
@@ -113,6 +117,20 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('@agendamentos:token')
     if (token) setIsAuthenticated(true)
   }, [])
+
+  useEffect(() => {
+    if (!awaitingConfirmationReply || !testConfirmationAppt) return
+    if (testConfirmationAppt.status === 'confirmed') {
+      toast.success('Sistema recebeu sua resposta! Agendamento CONFIRMADO.')
+      setAwaitingConfirmationReply(false)
+    } else if (
+      testConfirmationAppt.status === 'cancelled' &&
+      testConfirmationAppt.notes?.includes('[WhatsApp]')
+    ) {
+      toast.success('Sistema recebeu sua resposta! Agendamento CANCELADO.')
+      setAwaitingConfirmationReply(false)
+    }
+  }, [awaitingConfirmationReply, testConfirmationAppt])
 
   if (!isAuthenticated) return <LoginPage onLogin={() => setIsAuthenticated(true)} />
 
@@ -519,7 +537,9 @@ export default function AdminDashboard() {
                   placeholder="Olá {cliente}! Você tem um agendamento com {profissional} para {data}.\n\nResponda *1* para CONFIRMAR ou *2* para CANCELAR." 
                 />
                 <div className="mt-3 p-3 bg-green-50/50 rounded-lg border border-green-100 space-y-2">
-                  <p className="text-xs text-green-800 font-medium">Testar esta mensagem (usa dados de exemplo: João Silva, Dr. Carlos, amanhã às 14:30)</p>
+                  <p className="text-xs text-green-800 font-medium">
+                    Teste completo: cria um agendamento pendente de teste, envia a mensagem e monitora se você responder <strong>1</strong> ou <strong>2</strong> no WhatsApp.
+                  </p>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="tel"
@@ -530,14 +550,16 @@ export default function AdminDashboard() {
                     />
                     <button
                       type="button"
-                      disabled={testConfirmation.isPending || !testConfirmationPhone}
+                      disabled={testConfirmation.isPending || !testConfirmationPhone || awaitingConfirmationReply}
                       onClick={async () => {
                         try {
-                          await testConfirmation.mutateAsync({
+                          const result = await testConfirmation.mutateAsync({
                             telefone: testConfirmationPhone,
                             msg_confirmation: msgConfirmation || undefined,
                           })
-                          toast.success('Mensagem de confirmação enviada!')
+                          setTestConfirmationApptId(result.appointment_id)
+                          setAwaitingConfirmationReply(true)
+                          toast.success('Mensagem enviada! Responda 1 ou 2 no WhatsApp.')
                         } catch {
                           toast.error('Falha ao enviar. Verifique a conexão do WhatsApp.')
                         }
@@ -548,6 +570,45 @@ export default function AdminDashboard() {
                       {testConfirmation.isPending ? 'Enviando...' : 'Enviar teste de confirmação'}
                     </button>
                   </div>
+                  {awaitingConfirmationReply && (
+                    <div className="p-3 bg-white rounded-lg border border-green-200 space-y-2">
+                      <p className="text-sm font-semibold text-green-700 animate-pulse">
+                        Aguardando sua resposta no WhatsApp...
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        Responda <strong>1</strong> para confirmar ou <strong>2</strong> para cancelar.
+                        O painel atualiza automaticamente quando o webhook receber a mensagem.
+                      </p>
+                      <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-100">
+                        Se nada mudar após responder, verifique na Evolution API se o webhook aponta para{' '}
+                        <code className="text-[10px]">/webhooks/whatsapp</code> com o evento{' '}
+                        <code className="text-[10px]">messages.upsert</code>.
+                      </p>
+                      {testConfirmationAppt && (
+                        <p className="text-xs text-gray-500">
+                          Status atual: <span className="font-bold uppercase">{testConfirmationAppt.status}</span>
+                          {' · '}
+                          {testConfirmationAppt.professional_name}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAwaitingConfirmationReply(false)
+                          setTestConfirmationApptId(null)
+                        }}
+                        className="text-xs text-gray-500 underline"
+                      >
+                        Parar monitoramento
+                      </button>
+                    </div>
+                  )}
+                  {!awaitingConfirmationReply && testConfirmationAppt?.status === 'confirmed' && (
+                    <p className="text-xs text-green-700 font-medium">Último teste: confirmado com sucesso.</p>
+                  )}
+                  {!awaitingConfirmationReply && testConfirmationAppt?.status === 'cancelled' && testConfirmationAppt.notes?.includes('[WhatsApp]') && (
+                    <p className="text-xs text-green-700 font-medium">Último teste: cancelamento recebido com sucesso.</p>
+                  )}
                 </div>
               </div>
 

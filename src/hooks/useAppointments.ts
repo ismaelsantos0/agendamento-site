@@ -221,8 +221,26 @@ export function useTestWhatsApp() {
 export function useTestConfirmationMessage() {
   return useMutation({
     mutationFn: async (payload: { telefone: string, msg_confirmation?: string }) => {
-      const { data } = await api.post<{ status: string, preview: string }>('/settings/test-confirmation', payload)
+      const { data } = await api.post<{
+        status: string
+        preview: string
+        appointment_id: string
+        professional_name: string
+        customer_name: string
+      }>('/settings/test-confirmation', payload)
       return data
     }
+  })
+}
+
+export function useAppointmentById(appointmentId: string | null, enabled = false) {
+  return useQuery({
+    queryKey: ['appointment', appointmentId],
+    queryFn: async () => {
+      const { data } = await api.get<Appointment>(`/appointments/${appointmentId}`)
+      return data
+    },
+    enabled: enabled && !!appointmentId,
+    refetchInterval: enabled && !!appointmentId ? 3000 : false,
   })
 }
