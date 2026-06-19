@@ -103,6 +103,8 @@ export default function AdminDashboard() {
   
   const [msgCreated, setMsgCreated] = useState('')
   const [msgConfirmation, setMsgConfirmation] = useState('')
+  const [msgFeedbackConfirmed, setMsgFeedbackConfirmed] = useState('')
+  const [msgFeedbackCancelled, setMsgFeedbackCancelled] = useState('')
 
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
@@ -110,6 +112,8 @@ export default function AdminDashboard() {
       setDurationMinutes(settings.appointment_duration_minutes.toString())
       setMsgCreated(settings.msg_created || '')
       setMsgConfirmation(settings.msg_confirmation || '')
+      setMsgFeedbackConfirmed(settings.msg_feedback_confirmed || '')
+      setMsgFeedbackCancelled(settings.msg_feedback_cancelled || '')
     }
   }, [settings])
 
@@ -240,7 +244,9 @@ export default function AdminDashboard() {
       await updateSettings.mutateAsync({ 
         appointment_duration_minutes: minutes,
         msg_created: msgCreated.trim() || undefined,
-        msg_confirmation: msgConfirmation.trim() || undefined
+        msg_confirmation: msgConfirmation.trim() || undefined,
+        msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
+        msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined
       })
       toast.success('Configurações salvas!')
       setShowSettingsForm(false)
@@ -610,6 +616,26 @@ export default function AdminDashboard() {
                     <p className="text-xs text-green-700 font-medium">Último teste: cancelamento recebido com sucesso.</p>
                   )}
                 </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Resposta do Robô para CONFIRMADO (Digitou 1)</label>
+                <textarea 
+                  className="input-field min-h-[80px] resize-y text-sm font-medium text-gray-700" 
+                  value={msgFeedbackConfirmed} 
+                  onChange={e => setMsgFeedbackConfirmed(e.target.value)} 
+                  placeholder="Seu agendamento foi *CONFIRMADO* com sucesso! Aguardamos você." 
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Resposta do Robô para CANCELADO (Digitou 2)</label>
+                <textarea 
+                  className="input-field min-h-[80px] resize-y text-sm font-medium text-gray-700" 
+                  value={msgFeedbackCancelled} 
+                  onChange={e => setMsgFeedbackCancelled(e.target.value)} 
+                  placeholder="Seu agendamento foi *CANCELADO*." 
+                />
               </div>
 
               <button disabled={updateSettings.isPending} type="submit" className="btn-primary py-3 text-sm mt-2">

@@ -120,7 +120,13 @@ export function useCreateAvailabilityRule() {
 export function useUpdateSettings() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: { appointment_duration_minutes: number, msg_created?: string, msg_confirmation?: string }) => {
+    mutationFn: async (payload: { 
+      appointment_duration_minutes: number, 
+      msg_created?: string, 
+      msg_confirmation?: string,
+      msg_feedback_confirmed?: string,
+      msg_feedback_cancelled?: string
+    }) => {
       const { data } = await api.put<ClinicSettings>('/settings', payload)
       return data
     },

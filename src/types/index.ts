@@ -39,6 +39,8 @@ export interface ClinicSettings {
   appointment_duration_minutes: number
   msg_created?: string
   msg_confirmation?: string
+  msg_feedback_confirmed?: string
+  msg_feedback_cancelled?: string
 }
 
 export interface Blockout {
