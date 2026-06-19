@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send } from 'lucide-react'
-import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
+import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
@@ -26,23 +26,33 @@ import {
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [calendarView, setCalendarView] = useState<'list' | 'week' | 'day'>('week')
+  const [currentDate, setCurrentDate] = useState<Date>(new Date())
   const [filterPeriod, setFilterPeriod] = useState<'hoje' | 'semana' | 'mes' | 'todos'>('hoje')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterProfessional, setFilterProfessional] = useState<string>('')
   
   let startDate: string | undefined = undefined
   let endDate: string | undefined = undefined
-  const now = new Date()
 
-  if (filterPeriod === 'hoje') {
-    startDate = format(startOfDay(now), 'yyyy-MM-dd')
-    endDate = format(endOfDay(now), 'yyyy-MM-dd')
-  } else if (filterPeriod === 'semana') {
-    startDate = format(startOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
-    endDate = format(endOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd')
-  } else if (filterPeriod === 'mes') {
-    startDate = format(startOfMonth(now), 'yyyy-MM-dd')
-    endDate = format(endOfMonth(now), 'yyyy-MM-dd')
+  if (calendarView === 'day') {
+    startDate = format(startOfDay(currentDate), 'yyyy-MM-dd')
+    endDate = format(endOfDay(currentDate), 'yyyy-MM-dd')
+  } else if (calendarView === 'week') {
+    startDate = format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+    endDate = format(endOfWeek(currentDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  } else {
+    const now = new Date()
+    if (filterPeriod === 'hoje') {
+      startDate = format(startOfDay(now), 'yyyy-MM-dd')
+      endDate = format(endOfDay(now), 'yyyy-MM-dd')
+    } else if (filterPeriod === 'semana') {
+      startDate = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+      endDate = format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+    } else if (filterPeriod === 'mes') {
+      startDate = format(startOfMonth(now), 'yyyy-MM-dd')
+      endDate = format(endOfMonth(now), 'yyyy-MM-dd')
+    }
   }
 
   const { data: appointments = [] } = useAppointments(
@@ -83,6 +93,7 @@ export default function AdminDashboard() {
   const [showAppointmentsTab, setShowAppointmentsTab] = useState(false)
   const [cancelModalApptId, setCancelModalApptId] = useState<string | null>(null)
   const [cancelReason, setCancelReason] = useState('')
+  const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
 
   const updateAppointmentStatus = useUpdateAppointmentStatus()
 
@@ -645,33 +656,65 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Aba de Agendamentos */}
         {showAppointmentsTab && (
           <section className="space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            {/* Cabeçalho da Aba e Toggles */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
                 <CalendarCheck className="w-4 h-4" />
                 Gestão de Agendamentos
               </h2>
               
               <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
-                <button onClick={() => setFilterPeriod('hoje')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'hoje' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Hoje</button>
-                <button onClick={() => setFilterPeriod('semana')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'semana' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Semana</button>
-                <button onClick={() => setFilterPeriod('mes')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'mes' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Mês</button>
-                <button onClick={() => setFilterPeriod('todos')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${filterPeriod === 'todos' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Todos</button>
+                <button onClick={() => setCalendarView('week')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${calendarView === 'week' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Semana</button>
+                <button onClick={() => setCalendarView('day')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${calendarView === 'day' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Dia</button>
+                <button onClick={() => setCalendarView('list')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${calendarView === 'list' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Lista</button>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex-1">
-                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Status</label>
-                <select className="input-field py-1.5 text-sm" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                  <option value="">Todos os status</option>
-                  <option value="pending">Apenas Pendentes</option>
-                  <option value="confirmed">Apenas Confirmados</option>
-                  <option value="cancelled">Apenas Cancelados</option>
-                </select>
+            {/* Controles de Navegação de Data para Semana e Dia */}
+            {calendarView !== 'list' && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={() => {
+                      if (calendarView === 'day') setCurrentDate(prev => subDays(prev, 1))
+                      if (calendarView === 'week') setCurrentDate(prev => subWeeks(prev, 1))
+                    }}
+                    className="px-3 py-1.5 hover:bg-gray-50 rounded-lg text-xs font-bold transition-colors border border-gray-100"
+                  >
+                    &larr; Anterior
+                  </button>
+                  <button 
+                    onClick={() => setCurrentDate(new Date())}
+                    className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-all"
+                  >
+                    Hoje
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (calendarView === 'day') setCurrentDate(prev => addDays(prev, 1))
+                      if (calendarView === 'week') setCurrentDate(prev => addWeeks(prev, 1))
+                    }}
+                    className="px-3 py-1.5 hover:bg-gray-50 rounded-lg text-xs font-bold transition-colors border border-gray-100"
+                  >
+                    Próximo &rarr;
+                  </button>
+                </div>
+                
+                <span className="font-bold text-gray-800 text-xs sm:text-sm capitalize flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  {calendarView === 'day' ? (
+                    format(currentDate, "eeee, dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                  ) : (
+                    `Semana: ${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "dd/MM")} a ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "dd/MM/yyyy")}`
+                  )}
+                </span>
               </div>
+            )}
+
+            {/* Filtros Ativos (Profissional e Status) */}
+            <div className="flex flex-col sm:flex-row gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex-1">
                 <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Especialista</label>
                 <select className="input-field py-1.5 text-sm" value={filterProfessional} onChange={e => setFilterProfessional(e.target.value)}>
@@ -681,48 +724,242 @@ export default function AdminDashboard() {
                   ))}
                 </select>
               </div>
-            </div>
-            
-            {appointments.length === 0 && (
-              <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-gray-100 shadow-sm">Nenhum agendamento encontrado.</p>
-            )}
-
-            <div className="grid gap-4">
-              {appointments.map(appt => (
-                <div key={appt.id} className="card border-l-4 border-l-primary flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-gray-900">{appt.customer_name}</h3>
-                      <p className="text-xs font-semibold text-gray-500 mt-0.5">com {appt.professional_name}</p>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : appt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {appt.status}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm font-medium text-primary bg-primary/5 px-3 py-2 rounded-lg inline-block w-fit">
-                    {format(parseISO(appt.start_time), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
-                  </div>
-
-                  {appt.notes && (
-                    <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100 mt-1 whitespace-pre-wrap">
-                      <span className="font-bold">Observações/Motivo:</span> {appt.notes}
-                    </div>
-                  )}
-
-                  {appt.status === 'pending' && (
-                    <div className="flex gap-2 pt-2 border-t border-gray-50 mt-1">
-                      <button onClick={() => handleStatusChange(appt.id, 'confirmed')} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-green-100">
-                        <CheckCircle className="w-4 h-4"/> Confirmar
-                      </button>
-                      <button onClick={() => setCancelModalApptId(appt.id)} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-red-100">
-                        <XCircle className="w-4 h-4"/> Cancelar
-                      </button>
-                    </div>
-                  )}
+              <div className="flex-1">
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Status</label>
+                <select className="input-field py-1.5 text-sm" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                  <option value="">Todos os status</option>
+                  <option value="pending">Apenas Pendentes</option>
+                  <option value="confirmed">Apenas Confirmados</option>
+                  <option value="cancelled">Apenas Cancelados</option>
+                </select>
+              </div>
+              {calendarView === 'list' && (
+                <div className="flex-1">
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Período</label>
+                  <select className="input-field py-1.5 text-sm" value={filterPeriod} onChange={e => setFilterPeriod(e.target.value as any)}>
+                    <option value="hoje">Hoje</option>
+                    <option value="semana">Esta Semana</option>
+                    <option value="mes">Este Mês</option>
+                    <option value="todos">Todos</option>
+                  </select>
                 </div>
-              ))}
+              )}
             </div>
+
+            {/* 1. VISÃO SEMANAL (WEEK GRID) */}
+            {calendarView === 'week' && (() => {
+              const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
+              const daysOfWeek = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+              const hours = Array.from({ length: 12 }, (_, i) => i + 8) // 08:00 as 19:00
+
+              const getApptPosition = (appt: any) => {
+                const start = parseISO(appt.start_time)
+                const end = parseISO(appt.end_time)
+                const startHour = start.getHours() + start.getMinutes() / 60
+                const endHour = end.getHours() + end.getMinutes() / 60
+                
+                const top = Math.max(0, (startHour - 8) * 4) // 4rem (h-16) por hora
+                const height = Math.max(1.5, (endHour - startHour) * 4)
+                return { top: `${top}rem`, height: `${height}rem` }
+              }
+
+              const diasSemanaNome = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+              return (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+                  <div className="min-w-[800px]">
+                    {/* Header do Calendário Semanal */}
+                    <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-100 bg-gray-50/50 text-center py-2.5">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase flex items-center justify-center">Hora</div>
+                      {daysOfWeek.map((day, idx) => {
+                        const isToday = isSameDay(day, new Date())
+                        return (
+                          <div key={idx} className={`flex flex-col items-center justify-center py-1 rounded-xl ${isToday ? 'bg-primary/10 text-primary font-bold px-1.5' : 'text-gray-600'}`}>
+                            <span className="text-[10px] font-bold uppercase">{diasSemanaNome[idx]}</span>
+                            <span className="text-sm font-extrabold">{format(day, 'dd')}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Corpo do Calendário Semanal */}
+                    <div className="grid grid-cols-[60px_repeat(7,1fr)] relative h-[48rem]">
+                      {/* Grid de Linhas de Horário (Background) */}
+                      <div className="absolute inset-0 grid grid-cols-[60px_repeat(7,1fr)] pointer-events-none">
+                        <div className="col-start-1 col-end-9 grid grid-rows-12">
+                          {hours.map((h) => (
+                            <div key={h} className="border-b border-gray-100 h-16 flex items-start pl-2 pt-1 text-[10px] font-bold text-gray-400">
+                              {String(h).padStart(2, '0')}:00
+                            </div>
+                          ))}
+                        </div>
+                        {/* Linhas verticais */}
+                        {Array.from({ length: 7 }).map((_, idx) => (
+                          <div key={idx} className="border-r border-gray-50 h-full col-start-2" style={{ gridColumnStart: idx + 2 }} />
+                        ))}
+                      </div>
+
+                      {/* Colunas de Conteúdo dos Agendamentos */}
+                      {daysOfWeek.map((day, dayIdx) => {
+                        const dayAppts = appointments.filter(appt => isSameDay(parseISO(appt.start_time), day))
+                        return (
+                          <div key={dayIdx} className="relative h-full col-start-2" style={{ gridColumnStart: dayIdx + 2 }}>
+                            {dayAppts.map(appt => {
+                              const pos = getApptPosition(appt)
+                              const colorClass = appt.status === 'pending'
+                                ? 'bg-amber-50 text-amber-800 border-amber-300 border-dashed'
+                                : appt.status === 'confirmed'
+                                ? 'bg-green-50 text-green-800 border-green-300'
+                                : 'bg-gray-100 text-gray-500 border-gray-300 line-through'
+
+                              return (
+                                <button
+                                  key={appt.id}
+                                  onClick={() => setSelectedAppt(appt)}
+                                  style={{ top: pos.top, height: pos.height }}
+                                  className={`absolute left-1 right-1 p-1.5 border rounded-xl text-left text-[10px] overflow-hidden flex flex-col justify-between shadow-sm active:scale-[0.98] transition-all ${colorClass}`}
+                                >
+                                  <div>
+                                    <p className="font-bold truncate leading-tight">{appt.customer_name}</p>
+                                    <p className="opacity-75 truncate leading-none mt-0.5">{appt.professional_name}</p>
+                                  </div>
+                                  <span className="font-semibold text-[8px] self-end bg-white/60 px-1 rounded">
+                                    {format(parseISO(appt.start_time), 'HH:mm')}
+                                  </span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* 2. VISÃO DIÁRIA (DAY TIMELINE) */}
+            {calendarView === 'day' && (() => {
+              const hours = Array.from({ length: 12 }, (_, i) => i + 8) // 08:00 as 19:00
+              const dayAppts = appointments.filter(appt => isSameDay(parseISO(appt.start_time), currentDate))
+
+              const getApptPosition = (appt: any) => {
+                const start = parseISO(appt.start_time)
+                const end = parseISO(appt.end_time)
+                const startHour = start.getHours() + start.getMinutes() / 60
+                const endHour = end.getHours() + end.getMinutes() / 60
+                
+                const top = Math.max(0, (startHour - 8) * 4) // 4rem (h-16) por hora
+                const height = Math.max(1.5, (endHour - startHour) * 4)
+                return { top: `${top}rem`, height: `${height}rem` }
+              }
+
+              return (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                  <div className="grid grid-cols-[60px_1fr] relative h-[48rem]">
+                    {/* Linha de Horários (Grid) */}
+                    <div className="absolute inset-0 grid grid-cols-[60px_1fr] pointer-events-none">
+                      <div className="col-start-1 col-end-3 grid grid-rows-12">
+                        {hours.map((h) => (
+                          <div key={h} className="border-b border-gray-100 h-16 flex items-start text-[10px] font-bold text-gray-400 pt-1">
+                            {String(h).padStart(2, '0')}:00
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Coluna Única de Agendamentos */}
+                    <div className="relative h-full col-start-2 ml-4">
+                      {dayAppts.length === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-300 text-xs font-semibold">
+                          Sem agendamentos para este dia.
+                        </div>
+                      )}
+                      
+                      {dayAppts.map(appt => {
+                        const pos = getApptPosition(appt)
+                        const colorClass = appt.status === 'pending'
+                          ? 'bg-amber-50 border-amber-300 text-amber-900 border-dashed border-2'
+                          : appt.status === 'confirmed'
+                          ? 'bg-green-50 border-green-300 text-green-950 border-2'
+                          : 'bg-gray-100 border-gray-300 text-gray-500 line-through'
+
+                        return (
+                          <button
+                            key={appt.id}
+                            onClick={() => setSelectedAppt(appt)}
+                            style={{ top: pos.top, height: pos.height }}
+                            className={`absolute left-0 right-0 p-3 border rounded-2xl text-left shadow-sm flex flex-col justify-between hover:shadow-md transition-all active:scale-[0.99] ${colorClass}`}
+                          >
+                            <div className="flex justify-between items-start gap-4">
+                              <div>
+                                <h4 className="font-extrabold text-sm leading-snug">{appt.customer_name}</h4>
+                                <p className="text-xs font-medium opacity-80 mt-0.5 flex items-center gap-1">
+                                  <span>Especialista:</span> <span className="font-bold">{appt.professional_name}</span>
+                                </p>
+                              </div>
+                              <span className="text-xs font-bold bg-white/70 px-2 py-0.5 rounded-full border border-gray-100">
+                                {format(parseISO(appt.start_time), 'HH:mm')} - {format(parseISO(appt.end_time), 'HH:mm')}
+                              </span>
+                            </div>
+                            
+                            {appt.notes && (
+                              <p className="text-[10px] italic opacity-85 truncate mt-1 max-w-[80%]">Obs: {appt.notes}</p>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* 3. VISÃO DE LISTA (LIST VIEW ORIGINAL) */}
+            {calendarView === 'list' && (
+              <>
+                {appointments.length === 0 && (
+                  <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-gray-100 shadow-sm">Nenhum agendamento encontrado.</p>
+                )}
+
+                <div className="grid gap-4">
+                  {appointments.map(appt => (
+                    <div key={appt.id} className="card border-l-4 border-l-primary flex flex-col gap-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-gray-900">{appt.customer_name}</h3>
+                          <p className="text-xs font-semibold text-gray-500 mt-0.5">com {appt.professional_name}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : appt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {appt.status}
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm font-medium text-primary bg-primary/5 px-3 py-2 rounded-lg inline-block w-fit">
+                        {format(parseISO(appt.start_time), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                      </div>
+
+                      {appt.notes && (
+                        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100 mt-1 whitespace-pre-wrap">
+                          <span className="font-bold">Observações/Motivo:</span> {appt.notes}
+                        </div>
+                      )}
+
+                      {appt.status === 'pending' && (
+                        <div className="flex gap-2 pt-2 border-t border-gray-50 mt-1">
+                          <button onClick={() => handleStatusChange(appt.id, 'confirmed')} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-green-100">
+                            <CheckCircle className="w-4 h-4"/> Confirmar
+                          </button>
+                          <button onClick={() => setCancelModalApptId(appt.id)} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-red-100">
+                            <XCircle className="w-4 h-4"/> Cancelar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </section>
         )}
 
@@ -759,6 +996,100 @@ export default function AdminDashboard() {
               >
                 {updateAppointmentStatus.isPending ? 'Aguarde...' : 'Confirmar Cancelamento'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalhes do Agendamento */}
+      {selectedAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-5 shadow-2xl border border-gray-100">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${selectedAppt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : selectedAppt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {selectedAppt.status}
+                </span>
+                <h3 className="font-extrabold text-gray-900 text-lg mt-1.5">{selectedAppt.customer_name}</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedAppt(null)} 
+                className="p-1.5 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-sm font-medium text-gray-600">
+              <div className="flex items-center gap-2.5 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                <Clock className="w-4 h-4 text-primary" />
+                <span>
+                  {format(parseISO(selectedAppt.start_time), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                  {` (${format(parseISO(selectedAppt.start_time), 'HH:mm')} - ${format(parseISO(selectedAppt.end_time), 'HH:mm')})`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                <UserPlus className="w-4 h-4 text-primary" />
+                <span>Especialista: <strong className="text-gray-800">{selectedAppt.professional_name}</strong></span>
+              </div>
+
+              <div className="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <MessageCircle className="w-4 h-4 text-green-600" />
+                  <span className="font-mono text-gray-800">{selectedAppt.customer_phone}</span>
+                </div>
+                <a 
+                  href={`https://wa.me/${selectedAppt.customer_phone}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-sm shadow-green-500/10"
+                >
+                  <Send className="w-3 h-3" />
+                  Conversar
+                </a>
+              </div>
+
+              {selectedAppt.notes && (
+                <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100 text-xs text-amber-800">
+                  <span className="font-bold block mb-1">Observações:</span>
+                  <p className="whitespace-pre-wrap leading-relaxed">{selectedAppt.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Ações Rápidas */}
+            <div className="flex gap-2 pt-2 border-t border-gray-100">
+              <button 
+                onClick={() => setSelectedAppt(null)}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors"
+              >
+                Fechar
+              </button>
+              {selectedAppt.status === 'pending' && (
+                <>
+                  <button 
+                    onClick={async () => {
+                      await handleStatusChange(selectedAppt.id, 'confirmed');
+                      setSelectedAppt(null);
+                    }}
+                    disabled={updateAppointmentStatus.isPending}
+                    className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition-colors"
+                  >
+                    Confirmar
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setCancelModalApptId(selectedAppt.id);
+                      setSelectedAppt(null);
+                    }}
+                    disabled={updateAppointmentStatus.isPending}
+                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
