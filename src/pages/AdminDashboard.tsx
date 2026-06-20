@@ -512,8 +512,9 @@ export default function AdminDashboard() {
                     try {
                       await testWp.mutateAsync({ telefone: testPhone, texto: testMsg })
                       toast.success('Enviado!')
-                    } catch {
-                      toast.error('Falha ao enviar.')
+                    } catch (err: any) {
+                      const errMsg = err.response?.data?.detail || err.message || 'Falha ao enviar.'
+                      toast.error(errMsg)
                     }
                   }}
                   className="bg-green-600 text-white rounded-xl px-4 py-2 text-sm font-bold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap"
