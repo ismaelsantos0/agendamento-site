@@ -202,6 +202,7 @@ export function useWhatsAppStatus() {
       return data
     },
     refetchInterval: 5000, // Poll a cada 5 segundos
+    enabled: !!localStorage.getItem('@agendamentos:token'),
   })
 }
 

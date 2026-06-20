@@ -18,12 +18,16 @@ api.interceptors.request.use((config) => {
 })
 
 // Interceptor para deslogar caso o token tenha expirado (401)
+// Só recarrega se havia um token válido antes (evita loop infinito de reload)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      const hadToken = localStorage.getItem('@agendamentos:token')
       localStorage.removeItem('@agendamentos:token')
-      window.location.reload()
+      if (hadToken) {
+        window.location.reload()
+      }
     }
     return Promise.reject(error)
   }
