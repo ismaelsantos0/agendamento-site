@@ -656,14 +656,40 @@ export default function AdminDashboard() {
                           />
                         </div>
                         <div className="md:col-span-12 mt-2 pt-3 border-t border-gray-200/60">
-                          <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-2 block">Profissionais Habilitados (Deixe vazio para Todos)</label>
+                          <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-2 block">Profissionais Habilitados</label>
                           <div className="flex flex-wrap gap-2">
+                            {/* Botão "Todos" */}
+                            {(() => {
+                              const allIds = professionals.map(p => p.id);
+                              const currentIds = svc.professional_ids || [];
+                              const allSelected = allIds.length > 0 && allIds.every(id => currentIds.includes(id));
+                              return (
+                                <label
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-colors ${allSelected || currentIds.length === 0 ? 'bg-teal-500 border-teal-500 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                                  onClick={() => {
+                                    const newServices = [...servicesList];
+                                    // Se todos marcados ou nenhum → limpa (vazio = todos permitidos)
+                                    if (allSelected || currentIds.length === 0) {
+                                      newServices[index].professional_ids = [];
+                                    } else {
+                                      newServices[index].professional_ids = [...allIds];
+                                    }
+                                    setServicesList(newServices);
+                                  }}
+                                >
+                                  <div className={`w-3 h-3 rounded flex items-center justify-center border ${allSelected || currentIds.length === 0 ? 'bg-white border-white' : 'border-gray-300'}`}>
+                                    {(allSelected || currentIds.length === 0) && <CheckCircle className="w-2.5 h-2.5 text-teal-500" />}
+                                  </div>
+                                  Todos
+                                </label>
+                              );
+                            })()}
                             {professionals.map(p => {
                               const isSelected = svc.professional_ids?.includes(p.id);
                               return (
                                 <label key={p.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-colors ${isSelected ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
-                                  <input 
-                                    type="checkbox" 
+                                  <input
+                                    type="checkbox"
                                     className="hidden"
                                     checked={isSelected || false}
                                     onChange={(e) => {
