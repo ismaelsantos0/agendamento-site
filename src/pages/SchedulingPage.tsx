@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Calendar, Clock, AlertCircle, User, Phone, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, User, Phone, CheckCircle2 } from 'lucide-react';
 import { format, addMinutes, setHours, setMinutes, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -24,8 +24,6 @@ export default function SchedulingPage() {
       setSelectedProfId(professionals[0].id);
     }
   }, [professionals, selectedProfId]);
-
-  const selectedProf = professionals.find(p => p.id === selectedProfId);
 
   // Phone masking
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
