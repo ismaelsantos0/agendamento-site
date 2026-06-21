@@ -5,7 +5,6 @@ import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
 import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp, useServices } from '../hooks/useAppointments';
-import { ServiceItem } from '../types';
 
 export default function SchedulingPage() {
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
@@ -24,18 +23,7 @@ export default function SchedulingPage() {
 
   const [formData, setFormData] = useState({ name: '', phone: '' });
 
-  // Autoselect professional or reset if current selection is invalid
-  useEffect(() => {
-    if (filteredProfessionals.length > 0) {
-      const isValid = filteredProfessionals.some(p => p.id === selectedProfId);
-      if (!isValid) {
-        setSelectedProfId(filteredProfessionals[0].id);
-        setSelectedTime(''); // Reset time if prof changes
-      }
-    } else {
-      setSelectedProfId('');
-    }
-  }, [filteredProfessionals, selectedProfId]);
+
 
   // Phone masking
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,14 +52,25 @@ export default function SchedulingPage() {
 
   const filteredProfessionals = useMemo(() => {
     if (!selectedService || availableServices.length === 0) return professionals;
-    
     const svc = availableServices.find(s => s.name === selectedService);
     if (!svc || !svc.professional_ids || svc.professional_ids.length === 0) {
-      return professionals; // All professionals allowed
+      return professionals;
     }
-    
     return professionals.filter(p => svc.professional_ids!.includes(p.id));
   }, [professionals, selectedService, availableServices]);
+
+  // Autoselect professional or reset if current selection is invalid
+  useEffect(() => {
+    if (filteredProfessionals.length > 0) {
+      const isValid = filteredProfessionals.some(p => p.id === selectedProfId);
+      if (!isValid) {
+        setSelectedProfId(filteredProfessionals[0].id);
+        setSelectedTime(''); // Reset time if prof changes
+      }
+    } else {
+      setSelectedProfId('');
+    }
+  }, [filteredProfessionals, selectedProfId]);
 
   const weekDays = useMemo(() => {
     const today = new Date();
