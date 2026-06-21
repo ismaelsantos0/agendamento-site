@@ -1302,7 +1302,7 @@ export default function AdminDashboard() {
               <div className="flex-1">
                 <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Especialista</label>
                 <select className="input-field py-1.5 text-sm" value={filterProfessional} onChange={e => setFilterProfessional(e.target.value)}>
-                  <option value="">Todos os especialistas</option>
+                  {currentUser?.role !== 'profissional' && <option value="">Todos os especialistas</option>}
                   {professionals.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
