@@ -98,7 +98,6 @@ export default function AdminDashboard() {
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
   // Usa o role do servidor se disponivel, caso contrario usa o do token JWT
   const role = currentUser?.role || roleInicial
-  const profId = currentUser?.professional_id || profIdInicial
   const createProf = useCreateProfessional()
   const updateProf = useUpdateProfessional()
   const deleteProf = useDeleteProfessional()
