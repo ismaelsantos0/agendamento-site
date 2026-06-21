@@ -101,18 +101,6 @@ export function useServices() {
 
 // ─── Mutations ───────────────────────────────────────────────────────────
 
-export function useUpdateSettings() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (payload: Partial<ClinicSettings>) => {
-      const { data } = await api.put<ClinicSettings>('/settings', payload)
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings })
-    },
-  })
-}
 
 export function useWhatsappLogout() {
   const queryClient = useQueryClient()
