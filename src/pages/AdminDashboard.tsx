@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2 } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
@@ -448,7 +448,10 @@ export default function AdminDashboard() {
     window.location.href = window.location.pathname
   }
 
-  const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'S�    <div className="min-h-screen bg-gray-50 pb-20">
+  const diasSemana = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-primary text-white pt-12 pb-6 px-6 rounded-b-[2rem] flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -458,7 +461,7 @@ export default function AdminDashboard() {
             <h1 className="text-lg font-bold">Gestão</h1>
             {currentUser && (
               <p className="text-xs text-white/70 capitalize">
-                {currentUser.role === 'master' ? '👑 Master' : currentUser.role === 'clinica' ? '🏥 Clínica' : '👨‍⚕️ Profissional'}
+              <p className="text-xs text-white/70 capitalize">{currentUser.role === 'master' ? 'Master' : currentUser.role === 'clinica' ? 'Clinica' : 'Profissional'}</p>
               </p>
             )}
           </div>
@@ -514,7 +517,6 @@ export default function AdminDashboard() {
               {currentUser?.role === 'master' ? 'Sistema' : 'Perfil'}
             </button>
           )}
-        </section>    )}
         </section>
 
         {/* Form: Especialista */}
