@@ -1285,13 +1285,23 @@ export default function AdminDashboard() {
                         </div>
                       )}
 
-                      {appt.status === 'pending' && (
-                        <div className="flex gap-2 pt-2 border-t border-gray-50 mt-1">
-                          <button onClick={() => handleStatusChange(appt.id, 'confirmed')} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-green-100">
-                            <CheckCircle className="w-4 h-4"/> Confirmar
+                      {appt.status !== 'completed' && appt.status !== 'cancelled' && (
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50 mt-1">
+                          {appt.status === 'pending' && (
+                            <>
+                              <button onClick={() => handleStatusChange(appt.id, 'confirmed')} disabled={updateAppointmentStatus.isPending} className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-green-100">
+                                <CheckCircle className="w-4 h-4"/> Confirmar
+                              </button>
+                              <button onClick={() => setCancelModalApptId(appt.id)} disabled={updateAppointmentStatus.isPending} className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-red-100">
+                                <XCircle className="w-4 h-4"/> Cancelar
+                              </button>
+                            </>
+                          )}
+                          <button onClick={() => setRescheduleModalAppt(appt)} className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-blue-100">
+                            <RefreshCw className="w-4 h-4"/> Remarcar
                           </button>
-                          <button onClick={() => setCancelModalApptId(appt.id)} disabled={updateAppointmentStatus.isPending} className="flex-1 flex items-center justify-center gap-2 py-2 bg-red-50 text-red-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-red-100">
-                            <XCircle className="w-4 h-4"/> Cancelar
+                          <button onClick={() => setCompleteModalAppt(appt)} className="flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-bold active:scale-95 transition-all hover:bg-emerald-100">
+                            <CalendarCheck className="w-4 h-4"/> Concluir
                           </button>
                         </div>
                       )}
