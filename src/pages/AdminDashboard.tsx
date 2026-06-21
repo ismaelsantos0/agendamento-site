@@ -2128,6 +2128,7 @@ function RescheduleModalInner({
 }
 
 function UsersTabContent() {
+  const { data: currentUser } = useCurrentUser()
   const { data: users = [], isLoading } = useUsers()
   const { data: professionals = [] } = useProfessionals()
   const createUser = useCreateUser()
@@ -2220,9 +2221,11 @@ function UsersTabContent() {
                 <p className="font-bold text-sm text-gray-800">{u.username}</p>
                 <p className="text-xs text-gray-500 uppercase">{u.role}</p>
               </div>
-              <button onClick={() => handleDelete(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {currentUser?.id !== u.id && u.username !== 'master' && (
+                <button onClick={() => handleDelete(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           ))}
           {users.length === 0 && <p className="text-sm text-gray-500">Nenhum usuário cadastrado.</p>}
