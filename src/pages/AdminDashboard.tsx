@@ -432,7 +432,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('@agendamentos:token')
-    setIsAuthenticated(false)
+    window.location.reload()
   }
 
   const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
