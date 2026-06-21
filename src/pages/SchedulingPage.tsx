@@ -114,6 +114,11 @@ export default function SchedulingPage() {
       return;
     }
 
+    if (!selectedDate) {
+      toast.error('Selecione uma data.');
+      return;
+    }
+
     const [h, m] = selectedTime.split(':').map(Number);
     const startDt = setMinutes(setHours(selectedDate, h), m);
 
