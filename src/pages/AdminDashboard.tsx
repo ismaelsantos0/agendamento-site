@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -98,9 +98,10 @@ export default function AdminDashboard() {
   const syncServices = useSyncServices()
   
   const [showSettingsForm, setShowSettingsForm] = useState(false)
+  const [showAppointmentsTab, setShowAppointmentsTab] = useState(true)
+  const [showPatientsTab, setShowPatientsTab] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState('60')
 
-  const [showAppointmentsTab, setShowAppointmentsTab] = useState(false)
   const [cancelModalApptId, setCancelModalApptId] = useState<string | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
@@ -383,21 +384,25 @@ export default function AdminDashboard() {
         
         {/* Sessão: Abas Principais */}
         <section className="flex flex-wrap gap-2">
-          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <CalendarCheck className={`w-6 h-6 mb-2 ${showAppointmentsTab ? 'text-primary' : 'text-gray-500'}`} />
-            Agendamentos
+            Agenda
           </button>
-          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowPatientsTab(!showPatientsTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showPatientsTab ? 'bg-purple-100 border-purple-500 text-purple-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <User className={`w-6 h-6 mb-2 ${showPatientsTab ? 'text-purple-600' : 'text-gray-500'}`} />
+            Prontuários
+          </button>
+          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
-            Especialista
+            Profissional
           </button>
-          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
             Horários
           </button>
-          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
-            Configurações
+            Sistema
           </button>
         </section>
 
@@ -1298,6 +1303,10 @@ export default function AdminDashboard() {
           </section>
         )}
 
+        {showPatientsTab && (
+          <PatientsTabContent onViewHistory={(patient) => setHistoryModalPatient(patient)} />
+        )}
+
       </main>
 
       {/* Modal de Cancelamento */}
@@ -1478,60 +1487,25 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Remarcar Consulta</h3>
             <p className="text-sm text-gray-600 mb-4">Escolha a nova data e horário. O paciente receberá um aviso no WhatsApp exigindo confirmação.</p>
             
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Nova Data</label>
-                <input 
-                  type="date" 
-                  value={rescheduleDate ? format(rescheduleDate, 'yyyy-MM-dd') : ''}
-                  onChange={e => setRescheduleDate(e.target.value ? new Date(e.target.value + 'T12:00:00') : null)}
-                  className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Novo Horário</label>
-                <input 
-                  type="time" 
-                  value={rescheduleTime}
-                  onChange={e => setRescheduleTime(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setRescheduleModalAppt(null)}
-                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={async () => {
-                  if (!rescheduleDate || !rescheduleTime) {
-                    toast.error("Selecione data e hora.");
-                    return;
-                  }
-                  const [h, m] = rescheduleTime.split(':').map(Number);
-                  const newStart = setMinutes(setHours(rescheduleDate, h), m);
-                  
-                  try {
-                    await rescheduleAppointment.mutateAsync({
-                      id: rescheduleModalAppt.id,
-                      start_time: newStart.toISOString()
-                    });
-                    toast.success("Consulta remarcada e mensagem enviada!");
-                    setRescheduleModalAppt(null);
-                  } catch (err: any) {
-                    toast.error(err.response?.data?.detail || "Erro ao remarcar");
-                  }
-                }}
-                disabled={rescheduleAppointment.isPending}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {rescheduleAppointment.isPending ? 'Salvando...' : 'Confirmar e Avisar'}
-              </button>
-            </div>
+            <RescheduleModalInner 
+              appt={rescheduleModalAppt} 
+              onClose={() => setRescheduleModalAppt(null)} 
+              onConfirm={async (date, time) => {
+                const [h, m] = time.split(':').map(Number);
+                const newStart = setMinutes(setHours(date, h), m);
+                
+                try {
+                  await rescheduleAppointment.mutateAsync({
+                    id: rescheduleModalAppt.id,
+                    start_time: newStart.toISOString()
+                  });
+                  toast.success("Consulta remarcada e mensagem enviada!");
+                  setRescheduleModalAppt(null);
+                } catch (err: any) {
+                  toast.error(err.response?.data?.detail || "Erro ao remarcar");
+                }
+              }} 
+            />
           </div>
         </div>
       )}
@@ -1670,6 +1644,228 @@ function PatientHistoryList({ phone, name }: { phone: string, name: string }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function PatientsTabContent({ 
+  onViewHistory 
+}: { 
+  onViewHistory: (patient: {name: string, phone: string}) => void 
+}) {
+  const { usePatients } = require('../hooks/useAppointments');
+  const { data: patients = [], isLoading } = usePatients();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  if (isLoading) return <div className="p-8 text-center text-gray-500 animate-pulse">Carregando prontuários...</div>;
+
+  const filtered = patients.filter((p: any) => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.phone.includes(searchTerm)
+  );
+
+  return (
+    <section className="space-y-4 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div>
+          <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <User className="w-6 h-6 text-purple-600" />
+            Prontuários
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">Histórico clínico de todos os pacientes atendidos.</p>
+        </div>
+        <div className="relative">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input 
+            type="text"
+            placeholder="Buscar por nome ou número..."
+            className="input-field pl-10 w-full sm:w-64"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">Nenhum paciente encontrado.</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {filtered.map((patient: any, index: number) => (
+              <div key={index} className="p-4 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-gray-900">{patient.name}</h3>
+                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                    <MessageCircle className="w-3 h-3 text-green-500" />
+                    {patient.phone}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  {patient.last_visit && (
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-bold text-gray-400">Última Consulta</p>
+                      <p className="text-sm font-semibold text-gray-700">{format(parseISO(patient.last_visit), "dd/MM/yyyy", { locale: ptBR })}</p>
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => onViewHistory({ name: patient.name, phone: patient.phone })}
+                    className="px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl font-bold text-sm transition-colors whitespace-nowrap"
+                  >
+                    Ver Histórico
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RescheduleModalInner({
+  appt,
+  onClose,
+  onConfirm
+}: {
+  appt: any;
+  onClose: () => void;
+  onConfirm: (date: Date, time: string) => Promise<void>;
+}) {
+  const { useAvailability, useBlockouts, useAppointments, useSettings } = require('../hooks/useAppointments');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: rules = [] } = useAvailability(appt.professional_id);
+  const { data: blockouts = [] } = useBlockouts(appt.professional_id);
+  const { data: settings } = useSettings();
+  
+  const startDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+  const { data: dayAppointments = [] } = useAppointments(appt.professional_id, startDateStr, startDateStr);
+
+  const duration = settings?.appointment_duration_minutes || 60; // Assumes default duration if service duration isn't available
+
+  const availableDays = rules.map((r: any) => r.day_of_week);
+
+  const timeSlots = (() => {
+    if (!selectedDate) return [];
+    const rule = rules.find((r: any) => r.day_of_week === selectedDate.getDay());
+    if (!rule) return [];
+
+    const slots: string[] = [];
+    const [startH, startM] = rule.start_time.split(':').map(Number);
+    const [endH, endM] = rule.end_time.split(':').map(Number);
+    
+    let currentSlot = setMinutes(setHours(selectedDate, startH), startM);
+    const endTime = setMinutes(setHours(selectedDate, endH), endM);
+    
+    // Minimum notice buffer: appointments must be at least 'duration' minutes in the future
+    const nowWithBuffer = new Date();
+    nowWithBuffer.setMinutes(nowWithBuffer.getMinutes() + duration);
+
+    while (currentSlot.getTime() + duration * 60000 <= endTime.getTime() + 1000) {
+      const slotStart = currentSlot;
+      const slotEnd = new Date(currentSlot.getTime() + duration * 60000);
+      
+      const hasConflict = dayAppointments.some((da: any) => {
+        if (da.status === 'cancelled' || da.id === appt.id) return false;
+        return slotStart < parseISO(da.end_time) && slotEnd > parseISO(da.start_time);
+      });
+
+      const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
+      const hasBlockout = blockouts.some((b: any) => {
+        if (b.date !== selectedDateString) return false;
+        const bStart = setMinutes(setHours(selectedDate, parseInt(b.start_time.split(':')[0])), parseInt(b.start_time.split(':')[1]));
+        const bEnd = setMinutes(setHours(selectedDate, parseInt(b.end_time.split(':')[0])), parseInt(b.end_time.split(':')[1]));
+        return slotStart < bEnd && slotEnd > bStart;
+      });
+
+      if (!hasConflict && !hasBlockout && slotStart >= nowWithBuffer) {
+        slots.push(format(currentSlot, 'HH:mm'));
+      }
+      currentSlot = new Date(currentSlot.getTime() + duration * 60000);
+    }
+    return slots;
+  })();
+
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const handleConfirm = async () => {
+    if (!selectedDate || !selectedTime) return;
+    setIsSubmitting(true);
+    await onConfirm(selectedDate, selectedTime);
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div className="space-y-4 mb-6">
+      <div>
+        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">1. Selecione a Nova Data</label>
+        <div className="grid grid-cols-4 gap-2">
+          {weekDays.map((date, i) => {
+            const isAvailable = availableDays.includes(date.getDay());
+            const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+            return (
+              <button
+                key={i}
+                type="button"
+                disabled={!isAvailable}
+                onClick={() => { setSelectedDate(date); setSelectedTime(''); }}
+                className={`p-2 rounded-xl border flex flex-col items-center justify-center transition-all ${!isAvailable ? 'opacity-40 cursor-not-allowed bg-slate-50 border-slate-100' : isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-105' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'}`}
+              >
+                <span className="text-[10px] uppercase font-bold mb-1 opacity-80">{format(date, 'eee', { locale: ptBR })}</span>
+                <span className="text-lg font-black">{format(date, 'dd')}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      
+      {selectedDate && (
+        <div className="animate-fade-in">
+          <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">2. Selecione o Novo Horário</label>
+          {timeSlots.length > 0 ? (
+            <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+              {timeSlots.map((time, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedTime(time)}
+                  className={`p-2 rounded-xl text-sm font-bold border transition-all ${selectedTime === time ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'}`}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center text-slate-500 text-sm">
+              Nenhum horário disponível.
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-2 mt-6 pt-4 border-t border-gray-100">
+        <button 
+          onClick={onClose}
+          disabled={isSubmitting}
+          className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button 
+          onClick={handleConfirm}
+          disabled={!selectedDate || !selectedTime || isSubmitting}
+          className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? 'Aguarde...' : 'Confirmar e Avisar'}
+        </button>
+      </div>
     </div>
   );
 }

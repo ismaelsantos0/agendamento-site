@@ -91,3 +91,9 @@ export interface CreateBlockoutPayload {
   start_time: string
   end_time: string
 }
+
+export interface Patient {
+  name: string;
+  phone: string;
+  last_visit: string | null;
+}

@@ -67,6 +67,16 @@ export function usePatientHistory(phone?: string, name?: string) {
   })
 }
 
+export function usePatients() {
+  return useQuery({
+    queryKey: ['patients'],
+    queryFn: async () => {
+      const { data } = await api.get<import('../types').Patient[]>('/appointments/patients')
+      return data
+    },
+  })
+}
+
 export function useSettings() {
   return useQuery({
     queryKey: queryKeys.settings,
