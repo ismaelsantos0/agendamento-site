@@ -131,6 +131,9 @@ export function useUpdateSettings() {
   return useMutation({
     mutationFn: async (payload: { 
       appointment_duration_minutes: number, 
+      clinic_name?: string,
+      address?: string,
+      opening_hours?: string,
       msg_created?: string, 
       msg_confirmation?: string,
       msg_feedback_confirmed?: string,
