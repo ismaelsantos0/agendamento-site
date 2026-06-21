@@ -28,7 +28,8 @@ import {
   useRescheduleAppointment,
   useCompleteAppointment,
   usePatientHistory,
-  useCreateAppointment
+  useCreateAppointment,
+  usePatients
 } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
@@ -107,8 +108,6 @@ export default function AdminDashboard() {
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
 
   const [rescheduleModalAppt, setRescheduleModalAppt] = useState<Appointment | null>(null)
-  const [rescheduleDate, setRescheduleDate] = useState<Date | null>(null)
-  const [rescheduleTime, setRescheduleTime] = useState('')
 
   const [completeModalAppt, setCompleteModalAppt] = useState<Appointment | null>(null)
   const [clinicalNotes, setClinicalNotes] = useState('')
@@ -1653,7 +1652,6 @@ function PatientsTabContent({
 }: { 
   onViewHistory: (patient: {name: string, phone: string}) => void 
 }) {
-  const { usePatients } = require('../hooks/useAppointments');
   const { data: patients = [], isLoading } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -1732,7 +1730,6 @@ function RescheduleModalInner({
   onClose: () => void;
   onConfirm: (date: Date, time: string) => Promise<void>;
 }) {
-  const { useAvailability, useBlockouts, useAppointments, useSettings } = require('../hooks/useAppointments');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
