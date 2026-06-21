@@ -341,7 +341,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleDeleteProf = async (id: string) => {
+  const handleLogout = () => {
     localStorage.removeItem('@agendamentos:token')
     setIsAuthenticated(false)
   }
