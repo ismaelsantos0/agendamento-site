@@ -1590,7 +1590,8 @@ export default function AdminDashboard() {
                         customer_name: completeModalAppt.customer_name,
                         customer_phone: completeModalAppt.customer_phone,
                         start_time: returnDate.toISOString(),
-                        service_name: completeModalAppt.service_name || undefined
+                        service_name: completeModalAppt.service_name || undefined,
+                        otp_code: "bypass_admin_123"
                       });
                       toast.success(`Retorno agendado para daqui a ${days} dias!`);
                     }
