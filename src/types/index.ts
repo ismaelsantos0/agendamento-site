@@ -32,6 +32,7 @@ export interface CreateAppointmentPayload {
   customer_phone: string
   start_time: string
   notes?: string
+  otp_code: string
 }
 
 export interface ClinicSettings {

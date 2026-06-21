@@ -4,17 +4,20 @@ import { format, addMinutes, setHours, setMinutes, parseISO, addDays } from 'dat
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
-import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts } from '../hooks/useAppointments';
+import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp } from '../hooks/useAppointments';
 
 export default function SchedulingPage() {
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
   const { data: settings } = useSettings();
   const createAppointment = useCreateAppointment();
+  const sendOtp = useSendOtp();
 
   const [selectedProfId, setSelectedProfId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
 
   const [formData, setFormData] = useState({ name: '', phone: '' });
 
@@ -87,9 +90,27 @@ export default function SchedulingPage() {
     return slots;
   }, [selectedDate, selectedProfId, rules, dayAppointments, settings, blockouts]);
 
-  const onSubmit = async () => {
+  const handleSendOtp = async () => {
     if (!selectedDate || !selectedTime || !formData.name || !formData.phone) {
       toast.error('Preencha todos os campos.');
+      return;
+    }
+    
+    try {
+      await sendOtp.mutateAsync({
+        customer_phone: formData.phone.replace(/\D/g, ''),
+        customer_name: formData.name
+      });
+      setOtpSent(true);
+      toast.success('Código enviado para o seu WhatsApp!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Erro ao enviar código. Verifique seu número e limites.');
+    }
+  };
+
+  const handleConfirmOtp = async () => {
+    if (!otpCode || otpCode.length !== 4) {
+      toast.error('Digite o código de 4 dígitos.');
       return;
     }
 
@@ -101,13 +122,16 @@ export default function SchedulingPage() {
         professional_id: selectedProfId,
         customer_name: formData.name,
         customer_phone: formData.phone.replace(/\D/g, ''),
-        start_time: startDt.toISOString()
+        start_time: startDt.toISOString(),
+        otp_code: otpCode
       });
       setSubmitted(true);
       setFormData({ name: '', phone: '' });
       setSelectedTime('');
-    } catch (err) {
-      toast.error('Erro ao solicitar agendamento.');
+      setOtpSent(false);
+      setOtpCode('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Erro ao solicitar agendamento.');
     }
   };
 
@@ -133,6 +157,34 @@ export default function SchedulingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* OTP Modal */}
+      {otpSent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Verificação Segura</h3>
+            <p className="text-sm text-slate-600 mb-6">Enviamos um código de 4 dígitos para o número <strong className="text-slate-800">{formData.phone}</strong> pelo WhatsApp.</p>
+            <input 
+              type="text" 
+              maxLength={4}
+              value={otpCode}
+              onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="0000"
+              className="w-full text-center text-4xl tracking-[0.5em] font-bold py-4 rounded-xl border-2 border-slate-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/20 outline-none mb-6 transition-all"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setOtpSent(false)} className="flex-1 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">Cancelar</button>
+              <button 
+                onClick={handleConfirmOtp} 
+                disabled={createAppointment.isPending}
+                className="flex-1 py-3 text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 rounded-xl transition-colors shadow-lg shadow-teal-600/30"
+              >
+                {createAppointment.isPending ? 'Validando...' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-4">
@@ -323,16 +375,16 @@ export default function SchedulingPage() {
 
         {/* Confirm Button */}
         <button
-          onClick={onSubmit}
-          disabled={!hasSlots || !formData.name || !formData.phone || !selectedTime || createAppointment.isPending}
+          onClick={handleSendOtp}
+          disabled={!hasSlots || !formData.name || !formData.phone || !selectedTime || sendOtp.isPending}
           className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-            hasSlots && formData.name && formData.phone && selectedTime && !createAppointment.isPending
+            hasSlots && formData.name && formData.phone && selectedTime && !sendOtp.isPending
               ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:from-teal-600 hover:to-teal-700 active:scale-95'
               : 'bg-slate-200 text-slate-500 cursor-not-allowed'
           }`}
         >
           <Calendar className="w-5 h-5" />
-          {createAppointment.isPending ? 'Agendando...' : 'Confirmar Agendamento'}
+          {sendOtp.isPending ? 'Enviando Código...' : 'Agendar (Requer Verificação)'}
         </button>
 
         {/* Helper Text */}

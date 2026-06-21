@@ -731,7 +731,7 @@ export default function AdminDashboard() {
                 <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Status</label>
                 <select className="input-field py-1.5 text-sm" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
                   <option value="">Todos os status</option>
-                  <option value="pending">Apenas Pendentes</option>
+                  <option value="pending">Apenas Aguardando Aprovação</option>
                   <option value="confirmed">Apenas Confirmados</option>
                   <option value="cancelled">Apenas Cancelados</option>
                 </select>
@@ -934,7 +934,7 @@ export default function AdminDashboard() {
                           <p className="text-xs font-semibold text-gray-500 mt-0.5">com {appt.professional_name}</p>
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : appt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {appt.status}
+                          {appt.status === 'pending' ? 'Aguardando' : appt.status === 'confirmed' ? 'Confirmado' : 'Cancelado'}
                         </span>
                       </div>
                       
@@ -1011,7 +1011,7 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${selectedAppt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : selectedAppt.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {selectedAppt.status}
+                  {selectedAppt.status === 'pending' ? 'Aguardando Aprovação' : selectedAppt.status === 'confirmed' ? 'Confirmado' : 'Cancelado'}
                 </span>
                 <h3 className="font-extrabold text-gray-900 text-lg mt-1.5">{selectedAppt.customer_name}</h3>
               </div>

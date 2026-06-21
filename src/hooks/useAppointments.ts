@@ -78,6 +78,15 @@ export function useCreateAppointment() {
   })
 }
 
+export function useSendOtp() {
+  return useMutation({
+    mutationFn: async (payload: { customer_phone: string; customer_name: string }) => {
+      const { data } = await api.post('/appointments/send-code', payload)
+      return data
+    },
+  })
+}
+
 export function useUpdateAppointmentStatus() {
   const queryClient = useQueryClient()
   return useMutation({
