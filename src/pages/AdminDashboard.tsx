@@ -1210,6 +1210,11 @@ export default function AdminDashboard() {
                                 <p className="text-xs font-medium opacity-80 mt-0.5 flex items-center gap-1">
                                   <span>Especialista:</span> <span className="font-bold">{appt.professional_name}</span>
                                 </p>
+                                {appt.service_name && (
+                                  <span className="inline-block mt-1 text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                    {appt.service_name}
+                                  </span>
+                                )}
                               </div>
                               <span className="text-xs font-bold bg-white/70 px-2 py-0.5 rounded-full border border-gray-100">
                                 {format(parseISO(appt.start_time), 'HH:mm')} - {format(parseISO(appt.end_time), 'HH:mm')}
@@ -1346,6 +1351,13 @@ export default function AdminDashboard() {
                 <UserPlus className="w-4 h-4 text-primary" />
                 <span>Especialista: <strong className="text-gray-800">{selectedAppt.professional_name}</strong></span>
               </div>
+
+              {selectedAppt.service_name && (
+                <div className="flex items-center gap-2.5 bg-blue-50 p-2.5 rounded-xl border border-blue-100">
+                  <CalendarCheck className="w-4 h-4 text-blue-600" />
+                  <span>Serviço: <strong className="text-blue-800">{selectedAppt.service_name}</strong></span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100">
                 <div className="flex items-center gap-2.5">
