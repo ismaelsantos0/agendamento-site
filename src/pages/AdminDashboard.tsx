@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2 } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2, Link } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -1308,10 +1308,30 @@ export default function AdminDashboard() {
           <section className="space-y-4 animate-fade-in">
             {/* Cabeçalho da Aba e Toggles */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                <CalendarCheck className="w-4 h-4" />
-                Gestão de Agendamentos
-              </h2>
+              <div className="space-y-2">
+                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                  <CalendarCheck className="w-4 h-4" />
+                  Gestão de Agendamentos
+                </h2>
+                {role === 'profissional' && professionals.find(p => p.id === profId)?.has_custom_link && professionals.find(p => p.id === profId)?.slug && (
+                  <div className="flex items-center gap-2 bg-teal-50 border border-teal-100 p-2 rounded-lg inline-flex">
+                    <Link className="w-4 h-4 text-teal-600" />
+                    <span className="text-xs font-mono text-teal-800">
+                      /agendar/{professionals.find(p => p.id === profId)?.slug}
+                    </span>
+                    <button 
+                      onClick={() => {
+                        const slug = professionals.find(p => p.id === profId)?.slug
+                        navigator.clipboard.writeText(`${window.location.origin}/agendar/${slug}`)
+                        toast.success('Seu link de agendamento foi copiado!')
+                      }}
+                      className="text-xs font-bold bg-teal-600 text-white px-2 py-1 rounded hover:bg-teal-700 transition-colors shadow-sm ml-2"
+                    >
+                      Copiar Meu Link
+                    </button>
+                  </div>
+                )}
+              </div>
               
               <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
                 <button onClick={() => setCalendarView('week')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${calendarView === 'week' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Semana</button>
