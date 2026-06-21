@@ -31,7 +31,7 @@ export function useUsers() {
 export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: Partial<User>) => {
+    mutationFn: async (payload: Partial<User> & { password?: string }) => {
       const { data } = await api.post<User>('/users', payload)
       return data
     },
@@ -44,7 +44,7 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, ...payload }: Partial<User> & { id: string }) => {
+    mutationFn: async ({ id, ...payload }: Partial<User> & { id: string; password?: string }) => {
       const { data } = await api.put<User>(`/users/${id}`, payload)
       return data
     },

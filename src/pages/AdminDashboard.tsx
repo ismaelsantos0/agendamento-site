@@ -2131,7 +2131,6 @@ function UsersTabContent() {
   const { data: users = [], isLoading } = useUsers()
   const { data: professionals = [] } = useProfessionals()
   const createUser = useCreateUser()
-  const updateUser = useUpdateUser()
   const deleteUser = useDeleteUser()
 
   const [username, setUsername] = useState('')
