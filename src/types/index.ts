@@ -24,6 +24,7 @@ export interface Appointment {
   end_time: string
   status: AppointmentStatus
   notes?: string
+  service_name?: string
 }
 
 export interface CreateAppointmentPayload {
@@ -33,6 +34,7 @@ export interface CreateAppointmentPayload {
   start_time: string
   notes?: string
   otp_code: string
+  service_name?: string
 }
 
 export interface AddressInfo {
@@ -53,6 +55,13 @@ export interface DailySchedule {
 
 export type WeeklySchedule = Record<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday', DailySchedule>;
 
+export interface ServiceItem {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  price?: string;
+}
+
 export interface ClinicSettings {
   id: string;
   clinic_name: string | null;
@@ -63,6 +72,7 @@ export interface ClinicSettings {
   msg_confirmation: string | null;
   msg_feedback_confirmed: string | null;
   msg_feedback_cancelled: string | null;
+  services: string | null;
 }
 
 export interface Blockout {

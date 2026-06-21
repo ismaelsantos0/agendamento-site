@@ -4,7 +4,7 @@ import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOf
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
-import { Appointment, AddressInfo, WeeklySchedule } from '../types'
+import { Appointment, AddressInfo, WeeklySchedule, ServiceItem } from '../types'
 import { 
   useAppointments, 
   useProfessionals, 
@@ -134,8 +134,10 @@ export default function AdminDashboard() {
 
   const [cepLoading, setCepLoading] = useState(false)
   
+  const [servicesList, setServicesList] = useState<ServiceItem[]>([])
+  
   // Estados de Abas da Central de Configurações
-  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'general' | 'whatsapp'>('company')
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'services' | 'general' | 'whatsapp'>('company')
 
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
@@ -151,6 +153,9 @@ export default function AdminDashboard() {
       } catch { /* legacy string */ }
       try {
         if (settings.opening_hours) setWeeklySchedule(JSON.parse(settings.opening_hours))
+      } catch { /* legacy string */ }
+      try {
+        if (settings.services) setServicesList(JSON.parse(settings.services))
       } catch { /* legacy string */ }
     }
   }, [settings])
@@ -307,6 +312,7 @@ export default function AdminDashboard() {
         clinic_name: clinicName,
         address: JSON.stringify(addressInfo),
         opening_hours: JSON.stringify(weeklySchedule),
+        services: JSON.stringify(servicesList),
         msg_created: msgCreated.trim() || undefined,
         msg_confirmation: msgConfirmation.trim() || undefined,
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
@@ -479,6 +485,7 @@ export default function AdminDashboard() {
             {/* Abas Internas */}
             <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
               <button onClick={() => setActiveSettingsTab('company')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'company' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Dados da Empresa</button>
+              <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
               <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
               <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
             </div>
@@ -569,6 +576,89 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </form>
+            )}
+            
+            {activeSettingsTab === 'services' && (
+              <div className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-gray-800 text-sm">Serviços Oferecidos</h3>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const newId = Math.random().toString(36).substr(2, 9);
+                      setServicesList([...servicesList, { id: newId, name: '', duration_minutes: parseInt(durationMinutes) || 60 }]);
+                    }}
+                    className="btn-primary text-xs py-1.5 px-3"
+                  >
+                    + Novo Serviço
+                  </button>
+                </div>
+                
+                {servicesList.length === 0 ? (
+                  <p className="text-xs text-gray-500 text-center py-4 bg-gray-50 rounded-xl">Nenhum serviço cadastrado. Clique em "+ Novo Serviço".</p>
+                ) : (
+                  <div className="space-y-3">
+                    {servicesList.map((svc, index) => (
+                      <div key={svc.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl relative group">
+                        <div className="md:col-span-6">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Nome do Serviço</label>
+                          <input 
+                            className="input-field py-1.5 text-xs" 
+                            placeholder="Ex: Limpeza de Pele" 
+                            value={svc.name}
+                            onChange={(e) => {
+                              const newServices = [...servicesList];
+                              newServices[index].name = e.target.value;
+                              setServicesList(newServices);
+                            }}
+                          />
+                        </div>
+                        <div className="md:col-span-3">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Duração (min)</label>
+                          <input 
+                            type="number"
+                            className="input-field py-1.5 text-xs" 
+                            value={svc.duration_minutes}
+                            onChange={(e) => {
+                              const newServices = [...servicesList];
+                              newServices[index].duration_minutes = parseInt(e.target.value) || 0;
+                              setServicesList(newServices);
+                            }}
+                          />
+                        </div>
+                        <div className="md:col-span-3">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Preço (Opcional)</label>
+                          <input 
+                            className="input-field py-1.5 text-xs" 
+                            placeholder="R$ 100,00" 
+                            value={svc.price || ''}
+                            onChange={(e) => {
+                              const newServices = [...servicesList];
+                              newServices[index].price = e.target.value;
+                              setServicesList(newServices);
+                            }}
+                          />
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newServices = servicesList.filter((_, i) => i !== index);
+                            setServicesList(newServices);
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="pt-2">
+                  <button onClick={handleSaveSettings} disabled={updateSettings.isPending} className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
+                    {updateSettings.isPending ? 'Salvando...' : 'Salvar Serviços'}
+                  </button>
+                </div>
+              </div>
             )}
 
             {activeSettingsTab === 'general' && (

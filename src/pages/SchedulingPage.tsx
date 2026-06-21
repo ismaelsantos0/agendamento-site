@@ -12,6 +12,7 @@ export default function SchedulingPage() {
   const createAppointment = useCreateAppointment();
   const sendOtp = useSendOtp();
 
+  const [selectedService, setSelectedService] = useState<string>('');
   const [selectedProfId, setSelectedProfId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -49,6 +50,15 @@ export default function SchedulingPage() {
   const dateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined;
   const { data: dayAppointments = [] } = useAppointments(selectedProfId, dateStr);
 
+  const availableServices = useMemo(() => {
+    if (!settings?.services) return [];
+    try {
+      return JSON.parse(settings.services) as { id: string, name: string, duration_minutes: number, price?: string }[];
+    } catch {
+      return [];
+    }
+  }, [settings?.services]);
+
   const weekDays = useMemo(() => {
     const today = new Date();
     return Array.from({ length: 7 }).map((_, i) => addDays(today, i));
@@ -56,6 +66,7 @@ export default function SchedulingPage() {
 
   const timeSlots = useMemo(() => {
     if (!selectedDate || !selectedProfId) return [];
+    if (availableServices.length > 0 && !selectedService) return [];
     const rule = rules.find(r => r.day_of_week === selectedDate.getDay());
     if (!rule) return [];
 
@@ -65,7 +76,14 @@ export default function SchedulingPage() {
     
     let currentSlot = setMinutes(setHours(selectedDate, startH), startM);
     const endTime = setMinutes(setHours(selectedDate, endH), endM);
-    const duration = settings?.appointment_duration_minutes || 60;
+    
+    let duration = settings?.appointment_duration_minutes || 60;
+    if (selectedService && availableServices.length > 0) {
+      const svc = availableServices.find(s => s.name === selectedService);
+      if (svc && svc.duration_minutes) {
+        duration = svc.duration_minutes;
+      }
+    }
     
     // Minimum notice buffer: appointments must be at least 'duration' minutes in the future
     const nowWithBuffer = addMinutes(new Date(), duration);
@@ -93,9 +111,13 @@ export default function SchedulingPage() {
       currentSlot = addMinutes(currentSlot, duration);
     }
     return slots;
-  }, [selectedDate, selectedProfId, rules, dayAppointments, settings, blockouts]);
+  }, [selectedDate, selectedProfId, selectedService, availableServices, rules, dayAppointments, settings, blockouts]);
 
   const handleSendOtp = async () => {
+    if (availableServices.length > 0 && !selectedService) {
+      toast.error('Selecione um serviço.');
+      return;
+    }
     if (!selectedDate || !selectedTime || !formData.name || !formData.phone) {
       toast.error('Preencha todos os campos.');
       return;
@@ -134,7 +156,8 @@ export default function SchedulingPage() {
         customer_name: formData.name,
         customer_phone: formData.phone.replace(/\D/g, ''),
         start_time: startDt.toISOString(),
-        otp_code: otpCode
+        otp_code: otpCode,
+        service_name: selectedService || undefined
       });
       setSubmitted(true);
       setFormData({ name: '', phone: '' });
@@ -213,6 +236,23 @@ export default function SchedulingPage() {
       <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
         {/* Card Principal */}
         <div className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8">
+          {/* Services Section */}
+          {availableServices.length > 0 && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-slate-200 flex flex-col gap-2">
+              <label className="text-xs font-bold text-blue-800 uppercase">Qual serviço deseja?</label>
+              <select 
+                value={selectedService} 
+                onChange={e => { setSelectedService(e.target.value); setSelectedTime(''); }}
+                className="bg-transparent border-none text-sm font-semibold text-blue-900 focus:ring-0 p-0 cursor-pointer outline-none w-full"
+              >
+                <option value="">Selecione um serviço...</option>
+                {availableServices.map(s => (
+                  <option key={s.id} value={s.name}>{s.name} {s.price ? `- ${s.price}` : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Specialist Name Section */}
           <div className="bg-gradient-to-r from-teal-50 to-emerald-50 px-6 py-4 border-b border-slate-200 flex flex-col gap-2">
             <label className="text-xs font-bold text-teal-800 uppercase">Especialista</label>
