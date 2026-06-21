@@ -7,6 +7,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<SchedulingPage />} />
+        <Route path="/agendar/:slug" element={<SchedulingPage />} />
+        <Route path="/:slug" element={<SchedulingPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>

@@ -25,6 +25,18 @@ export function useProfessionals() {
   })
 }
 
+export function useProfessionalBySlug(slug?: string) {
+  return useQuery({
+    queryKey: ['professional', slug],
+    queryFn: async () => {
+      if (!slug) return null
+      const { data } = await api.get<Professional>(`/professionals/slug/${slug}`)
+      return data
+    },
+    enabled: !!slug,
+  })
+}
+
 export function useAvailability(professionalId?: string) {
   return useQuery({
     queryKey: queryKeys.availability(professionalId),

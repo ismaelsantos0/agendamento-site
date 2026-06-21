@@ -4,10 +4,13 @@ import { format, addMinutes, setHours, setMinutes, parseISO, addDays } from 'dat
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
-import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp, useServices } from '../hooks/useAppointments';
+import { useParams } from 'react-router-dom';
+import { useProfessionals, useProfessionalBySlug, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp, useServices } from '../hooks/useAppointments';
 
 export default function SchedulingPage() {
+  const { slug } = useParams<{ slug?: string }>();
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
+  const { data: profBySlug, isLoading: loadingSlug } = useProfessionalBySlug(slug);
   const { data: settings } = useSettings();
   const { data: dbServices = [] } = useServices();
   const createAppointment = useCreateAppointment();
@@ -51,16 +54,28 @@ export default function SchedulingPage() {
   }, [dbServices]);
 
   const filteredProfessionals = useMemo(() => {
-    if (!selectedService || availableServices.length === 0) return professionals;
+    if (profBySlug) return [profBySlug];
+    
+    // Hide custom link professionals from the general clinic hub
+    let validProfs = professionals;
+    if (!slug) {
+      validProfs = professionals.filter(p => !p.has_custom_link);
+    }
+    
+    if (!selectedService || availableServices.length === 0) return validProfs;
     const svc = availableServices.find(s => s.name === selectedService);
     if (!svc || !svc.professional_ids || svc.professional_ids.length === 0) {
-      return professionals;
+      return validProfs;
     }
-    return professionals.filter(p => svc.professional_ids!.includes(p.id));
-  }, [professionals, selectedService, availableServices]);
+    return validProfs.filter(p => svc.professional_ids!.includes(p.id));
+  }, [professionals, selectedService, availableServices, profBySlug, slug]);
 
   // Autoselect professional or reset if current selection is invalid
   useEffect(() => {
+    if (profBySlug) {
+      setSelectedProfId(profBySlug.id);
+      return;
+    }
     if (filteredProfessionals.length > 0) {
       const isValid = filteredProfessionals.some(p => p.id === selectedProfId);
       if (!isValid) {
@@ -70,7 +85,7 @@ export default function SchedulingPage() {
     } else {
       setSelectedProfId('');
     }
-  }, [filteredProfessionals, selectedProfId]);
+  }, [filteredProfessionals, selectedProfId, profBySlug]);
 
   const weekDays = useMemo(() => {
     const today = new Date();
@@ -240,7 +255,9 @@ export default function SchedulingPage() {
               <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
                 <User className="w-5 h-5 text-teal-600" />
               </div>
-              <h1 className="text-lg font-semibold text-slate-900">Agendamento</h1>
+              <h1 className="text-lg font-semibold text-slate-900">
+                {profBySlug ? profBySlug.name : (settings?.clinic_name || 'Agendamento')}
+              </h1>
             </div>
           </div>
         </div>
@@ -282,32 +299,32 @@ export default function SchedulingPage() {
               )}
 
               {/* Specialist Name Section */}
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1 mb-1.5 block">Especialista</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <UserPlus className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-                  </div>
-                  {loadingProfs ? (
-                    <div className="h-[52px] bg-slate-100 rounded-xl animate-pulse w-full border border-slate-200" />
-                  ) : (
-                    <select 
-                      value={selectedProfId} 
-                      onChange={e => { setSelectedProfId(e.target.value); setSelectedTime(''); }}
-                      className="block w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white hover:bg-slate-100 transition-all cursor-pointer"
-                    >
-                      {filteredProfessionals.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  )}
-                  {!loadingProfs && (
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <ChevronDown className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+              {!slug && (
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1 mb-1.5 block">Especialista</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <UserPlus className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
                     </div>
-                  )}
+                    {loadingProfs ? (
+                      <div className="h-[52px] bg-slate-100 rounded-xl animate-pulse w-full border border-slate-200" />
+                    ) : (
+                      <select 
+                        value={selectedProfId} 
+                        onChange={e => { setSelectedProfId(e.target.value); setSelectedTime(''); }}
+                        className="block w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white hover:bg-slate-100 transition-all cursor-pointer"
+                      >
+                        {filteredProfessionals.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    )}
+                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                      <ChevronDown className="h-4 w-4 text-slate-400" />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

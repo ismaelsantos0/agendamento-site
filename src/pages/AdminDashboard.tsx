@@ -97,6 +97,7 @@ export default function AdminDashboard() {
   const [editProfNotifyCancelled, setEditProfNotifyCancelled] = useState(true)
   const [editProfNotifyRescheduled, setEditProfNotifyRescheduled] = useState(true)
   const [editProfNotifyUpcoming, setEditProfNotifyUpcoming] = useState(true)
+  const [editProfHasCustomLink, setEditProfHasCustomLink] = useState(false)
 
   const [showRuleForm, setShowRuleForm] = useState(false)
   const [ruleProfId, setRuleProfId] = useState('')
@@ -161,6 +162,7 @@ export default function AdminDashboard() {
   const [msgFeedbackConfirmed, setMsgFeedbackConfirmed] = useState('')
   const [msgFeedbackCancelled, setMsgFeedbackCancelled] = useState('')
   const [clinicName, setClinicName] = useState('')
+  const [allowCustomLinks, setAllowCustomLinks] = useState(false)
   
   const defaultAddress: AddressInfo = { cep: '', street: '', number: '', neighborhood: '', city: '', state: '', mapsLink: '' }
   const [addressInfo, setAddressInfo] = useState<AddressInfo>(defaultAddress)
@@ -192,6 +194,7 @@ export default function AdminDashboard() {
       setMsgFeedbackConfirmed(settings.msg_feedback_confirmed || '')
       setMsgFeedbackCancelled(settings.msg_feedback_cancelled || '')
       setClinicName(settings.clinic_name || '')
+      setAllowCustomLinks(settings.allow_custom_links ?? false)
       try {
         if (settings.address) setAddressInfo(JSON.parse(settings.address))
       } catch { /* legacy string */ }
@@ -313,6 +316,7 @@ export default function AdminDashboard() {
         notify_cancelled: editProfNotifyCancelled,
         notify_rescheduled: editProfNotifyRescheduled,
         notify_upcoming: editProfNotifyUpcoming,
+        has_custom_link: editProfHasCustomLink,
         is_active: true
       })
       toast.success('Profissional atualizado!')
@@ -406,7 +410,8 @@ export default function AdminDashboard() {
         msg_created: msgCreated.trim() || undefined,
         msg_confirmation: msgConfirmation.trim() || undefined,
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
-        msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined
+        msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined,
+        allow_custom_links: allowCustomLinks
       })
       toast.success('Configurações gerais salvas!')
       setShowSettingsForm(false)
@@ -567,6 +572,12 @@ export default function AdminDashboard() {
                     <input type="checkbox" checked={editProfNotifyUpcoming} onChange={e => setEditProfNotifyUpcoming(e.target.checked)} className="rounded text-primary" />
                     <span className="text-sm text-gray-700">Lembretes de Consultas</span>
                   </label>
+                  {(currentUser?.role === 'master' || settings?.allow_custom_links) && (
+                    <label className="flex items-center gap-2 cursor-pointer mt-4 pt-4 border-t border-gray-100">
+                      <input type="checkbox" checked={editProfHasCustomLink} onChange={e => setEditProfHasCustomLink(e.target.checked)} className="rounded text-primary" />
+                      <span className="text-sm font-bold text-gray-800">Habilitar Link Exclusivo (SaaS)</span>
+                    </label>
+                  )}
                 </div>
                 <button disabled={updateProf.isPending} type="submit" className="btn-primary py-2 text-xs w-full">
                   {updateProf.isPending ? 'Salvando...' : 'Salvar Alterações'}
@@ -586,9 +597,23 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium text-sm text-gray-800">{prof.name}</p>
                           {(prof.profession || prof.contact_number) && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 mb-1">
                               {prof.profession}{prof.profession && prof.contact_number ? ' • ' : ''}{prof.contact_number}
                             </p>
+                          )}
+                          {prof.has_custom_link && prof.slug && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="text-[10px] font-mono bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded border border-teal-100">/agendar/{prof.slug}</span>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${window.location.origin}/agendar/${prof.slug}`)
+                                  toast.success('Link copiado!')
+                                }}
+                                className="text-[10px] font-bold text-teal-600 hover:text-teal-800 underline"
+                              >
+                                Copiar Link
+                              </button>
+                            </div>
                           )}
                         </div>
                         <button 
@@ -601,6 +626,7 @@ export default function AdminDashboard() {
                             setEditProfNotifyCancelled(prof.notify_cancelled ?? true)
                             setEditProfNotifyRescheduled(prof.notify_rescheduled ?? true)
                             setEditProfNotifyUpcoming(prof.notify_upcoming ?? true)
+                            setEditProfHasCustomLink(prof.has_custom_link ?? false)
                           }}
                           className="text-primary hover:text-primary-dark text-xs font-semibold px-3 py-1 bg-primary/10 rounded-full"
                         >
@@ -964,6 +990,14 @@ export default function AdminDashboard() {
                     <option value="120">2 Horas (120 min)</option>
                   </select>
                 </div>
+                {currentUser?.role === 'master' && (
+                  <div className="md:col-span-12 mt-4 pt-4 border-t border-gray-100">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={allowCustomLinks} onChange={e => setAllowCustomLinks(e.target.checked)} className="rounded text-primary" />
+                      <span className="text-sm font-bold text-gray-800">Permitir Geração de Links Exclusivos para Profissionais (SaaS)</span>
+                    </label>
+                  </div>
+                )}
                 <button disabled={updateSettings.isPending} type="submit" className="btn-primary bg-gray-800 hover:bg-gray-900 w-full sm:w-auto py-2 text-xs mt-2">
                   {updateSettings.isPending ? 'Salvando...' : 'Salvar Configuração'}
                 </button>
@@ -2046,7 +2080,7 @@ function RescheduleModalInner({
     return slots;
   })();
 
-  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+  const weekDays = Array.from({ length: 30 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return d;
@@ -2063,7 +2097,7 @@ function RescheduleModalInner({
     <div className="space-y-4 mb-6">
       <div>
         <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">1. Selecione a Nova Data</label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
           {weekDays.map((date, i) => {
             const isAvailable = availableDays.includes(date.getDay());
             const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
@@ -2073,7 +2107,7 @@ function RescheduleModalInner({
                 type="button"
                 disabled={!isAvailable}
                 onClick={() => { setSelectedDate(date); setSelectedTime(''); }}
-                className={`p-2 rounded-xl border flex flex-col items-center justify-center transition-all ${!isAvailable ? 'opacity-40 cursor-not-allowed bg-slate-50 border-slate-100' : isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-105' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'}`}
+                className={`snap-center min-w-[4rem] p-2 rounded-xl border flex flex-col items-center justify-center transition-all ${!isAvailable ? 'opacity-40 cursor-not-allowed bg-slate-50 border-slate-100' : isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md transform scale-105' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'}`}
               >
                 <span className="text-[10px] uppercase font-bold mb-1 opacity-80">{format(date, 'eee', { locale: ptBR })}</span>
                 <span className="text-lg font-black">{format(date, 'dd')}</span>

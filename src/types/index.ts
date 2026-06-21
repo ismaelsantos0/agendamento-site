@@ -10,6 +10,8 @@ export interface Professional {
   notify_rescheduled: boolean
   notify_upcoming: boolean
   is_active: boolean
+  slug?: string
+  has_custom_link: boolean
 }
 
 export interface User {
@@ -87,8 +89,9 @@ export interface ClinicSettings {
   msg_created: string | null;
   msg_confirmation: string | null;
   msg_feedback_confirmed: string | null;
-  msg_feedback_cancelled: string | null;
-  services: string | null;
+  msg_feedback_cancelled?: string
+  services?: string
+  allow_custom_links: boolean
 }
 
 export interface Blockout {
