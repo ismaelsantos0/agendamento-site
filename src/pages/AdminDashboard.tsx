@@ -99,7 +99,6 @@ export default function AdminDashboard() {
   const updateAppointmentStatus = useUpdateAppointmentStatus()
 
   // Estados do WhatsApp
-  const [showWhatsAppTab, setShowWhatsAppTab] = useState(false)
   const { data: wpStatus, refetch: refetchWpStatus } = useWhatsAppStatus()
   const generateQR = useWhatsAppQR()
   const testWp = useTestWhatsApp()
@@ -121,7 +120,7 @@ export default function AdminDashboard() {
   const [address, setAddress] = useState('')
   const [openingHours, setOpeningHours] = useState('')
   
-  // Abas de Configuração (quando showSettingsForm é true)
+  // Estados de Abas da Central de Configurações
   const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'general' | 'whatsapp'>('company')
 
   // Atualiza input quando carregar settings do backend
@@ -274,7 +273,6 @@ export default function AdminDashboard() {
       })
       toast.success('Configurações salvas!')
       setShowSettingsForm(false)
-      setShowWhatsAppTab(false)
     } catch {
       toast.error('Erro ao salvar configurações.')
     }
