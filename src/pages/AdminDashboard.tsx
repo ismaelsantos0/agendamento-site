@@ -34,7 +34,7 @@ import {
   useCreateAppointment,
   usePatients
 } from '../hooks/useAppointments'
-import { useCurrentUser, useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '../hooks/useUsers'
+import { useCurrentUser, useUsers, useCreateUser, useDeleteUser } from '../hooks/useUsers'
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
