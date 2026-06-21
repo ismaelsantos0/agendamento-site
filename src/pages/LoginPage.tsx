@@ -4,7 +4,7 @@ import { Lock, User as UserIcon, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api } from '../api/client'
 
-export default function LoginPage({ onLogin }: { onLogin: () => void }) {
+export default function LoginPage() {
   const { register, handleSubmit } = useForm()
   const [loading, setLoading] = useState(false)
 

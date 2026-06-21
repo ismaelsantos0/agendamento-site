@@ -284,7 +284,7 @@ export default function AdminDashboard() {
     }
   }, [awaitingConfirmationReply, testConfirmationAppt])
 
-  if (!isAuthenticated) return <LoginPage onLogin={() => setIsAuthenticated(true)} />
+  if (!isAuthenticated) return <LoginPage />
 
   // Bloqueia o render até o perfil do usuário ser carregado do servidor.
   // Sem isso, no primeiro render currentUser é undefined e todas as abas
