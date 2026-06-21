@@ -278,7 +278,12 @@ export default function AdminDashboard() {
       await createProf.mutateAsync({ 
         name: newProfName,
         profession: newProfProfession,
-        contact_number: newProfContact
+        contact_number: newProfContact,
+        notify_new: true,
+        notify_cancelled: true,
+        notify_rescheduled: true,
+        notify_upcoming: true,
+        is_active: true
       })
       toast.success('Profissional cadastrado!')
       setNewProfName('')
