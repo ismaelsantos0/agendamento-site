@@ -9,6 +9,7 @@ import {
   useAppointments, 
   useProfessionals, 
   useCreateProfessional, 
+  useUpdateProfessional,
   useCreateAvailabilityRule, 
   useSettings, 
   useUpdateSettings,
@@ -72,6 +73,7 @@ export default function AdminDashboard() {
   )
   const { data: professionals = [] } = useProfessionals()
   const createProf = useCreateProfessional()
+  const updateProf = useUpdateProfessional()
   const createRule = useCreateAvailabilityRule()
   const deleteRule = useDeleteAvailabilityRule()
   const createBlockout = useCreateBlockout()
@@ -80,7 +82,18 @@ export default function AdminDashboard() {
   // Estados dos novos formulários
   const [showProfForm, setShowProfForm] = useState(false)
   const [newProfName, setNewProfName] = useState('')
+  const [newProfProfession, setNewProfProfession] = useState('')
+  const [newProfContact, setNewProfContact] = useState('')
   
+  const [editingProfId, setEditingProfId] = useState<string | null>(null)
+  const [editProfName, setEditProfName] = useState('')
+  const [editProfProfession, setEditProfProfession] = useState('')
+  const [editProfContact, setEditProfContact] = useState('')
+  const [editProfNotifyNew, setEditProfNotifyNew] = useState(true)
+  const [editProfNotifyCancelled, setEditProfNotifyCancelled] = useState(true)
+  const [editProfNotifyRescheduled, setEditProfNotifyRescheduled] = useState(true)
+  const [editProfNotifyUpcoming, setEditProfNotifyUpcoming] = useState(true)
+
   const [showRuleForm, setShowRuleForm] = useState(false)
   const [ruleProfId, setRuleProfId] = useState('')
   const [ruleDay, setRuleDay] = useState('1')
@@ -262,12 +275,39 @@ export default function AdminDashboard() {
     e.preventDefault()
     if (!newProfName.trim()) return
     try {
-      await createProf.mutateAsync({ name: newProfName })
+      await createProf.mutateAsync({ 
+        name: newProfName,
+        profession: newProfProfession,
+        contact_number: newProfContact
+      })
       toast.success('Profissional cadastrado!')
       setNewProfName('')
+      setNewProfProfession('')
+      setNewProfContact('')
       setShowProfForm(false)
     } catch {
       toast.error('Erro ao cadastrar profissional.')
+    }
+  }
+
+  const handleEditProfessional = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingProfId || !editProfName.trim()) return
+    try {
+      await updateProf.mutateAsync({
+        id: editingProfId,
+        name: editProfName,
+        profession: editProfProfession,
+        contact_number: editProfContact,
+        notify_new: editProfNotifyNew,
+        notify_cancelled: editProfNotifyCancelled,
+        notify_rescheduled: editProfNotifyRescheduled,
+        notify_upcoming: editProfNotifyUpcoming
+      })
+      toast.success('Profissional atualizado!')
+      setEditingProfId(null)
+    } catch {
+      toast.error('Erro ao atualizar profissional.')
     }
   }
 
@@ -411,18 +451,124 @@ export default function AdminDashboard() {
 
         {/* Form: Especialista */}
         {showProfForm && (
-          <form onSubmit={handleAddProfessional} className="card animate-fade-in space-y-3">
-            <h3 className="font-bold text-gray-800 text-sm">Cadastrar Profissional</h3>
-            <input 
-              placeholder="Ex: Dr. João Silva" 
-              className="input-field" 
-              value={newProfName} 
-              onChange={e => setNewProfName(e.target.value)} 
-            />
-            <button disabled={createProf.isPending} type="submit" className="btn-primary py-2 text-xs">
-              {createProf.isPending ? 'Salvando...' : 'Salvar Especialista'}
-            </button>
-          </form>
+          <div className="animate-fade-in space-y-6">
+            {!editingProfId ? (
+              <form onSubmit={handleAddProfessional} className="card space-y-3">
+                <h3 className="font-bold text-gray-800 text-sm">Cadastrar Profissional</h3>
+                <input 
+                  placeholder="Nome Completo (Ex: Dr. João Silva)" 
+                  className="input-field" 
+                  value={newProfName} 
+                  onChange={e => setNewProfName(e.target.value)} 
+                />
+                <input 
+                  placeholder="Profissão (Ex: Dentista)" 
+                  className="input-field" 
+                  value={newProfProfession} 
+                  onChange={e => setNewProfProfession(e.target.value)} 
+                />
+                <input 
+                  placeholder="Número WhatsApp (Ex: 5511999999999)" 
+                  className="input-field" 
+                  value={newProfContact} 
+                  onChange={e => setNewProfContact(e.target.value)} 
+                />
+                <button disabled={createProf.isPending} type="submit" className="btn-primary py-2 text-xs">
+                  {createProf.isPending ? 'Salvando...' : 'Salvar Especialista'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleEditProfessional} className="card space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-gray-800 text-sm">Editar Profissional</h3>
+                  <button type="button" onClick={() => setEditingProfId(null)} className="text-gray-400 hover:text-gray-600">
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <input 
+                    placeholder="Nome Completo" 
+                    className="input-field" 
+                    value={editProfName} 
+                    onChange={e => setEditProfName(e.target.value)} 
+                  />
+                  <input 
+                    placeholder="Profissão" 
+                    className="input-field" 
+                    value={editProfProfession} 
+                    onChange={e => setEditProfProfession(e.target.value)} 
+                  />
+                  <input 
+                    placeholder="Número WhatsApp" 
+                    className="input-field" 
+                    value={editProfContact} 
+                    onChange={e => setEditProfContact(e.target.value)} 
+                  />
+                </div>
+                <div className="pt-2 border-t border-gray-100">
+                  <h4 className="text-xs font-semibold text-gray-600 mb-3">Notificações WhatsApp</h4>
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" checked={editProfNotifyNew} onChange={e => setEditProfNotifyNew(e.target.checked)} className="rounded text-primary" />
+                    <span className="text-sm text-gray-700">Novos Agendamentos</span>
+                  </label>
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" checked={editProfNotifyCancelled} onChange={e => setEditProfNotifyCancelled(e.target.checked)} className="rounded text-primary" />
+                    <span className="text-sm text-gray-700">Cancelamentos</span>
+                  </label>
+                  <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" checked={editProfNotifyRescheduled} onChange={e => setEditProfNotifyRescheduled(e.target.checked)} className="rounded text-primary" />
+                    <span className="text-sm text-gray-700">Remarcações</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={editProfNotifyUpcoming} onChange={e => setEditProfNotifyUpcoming(e.target.checked)} className="rounded text-primary" />
+                    <span className="text-sm text-gray-700">Lembretes de Consultas</span>
+                  </label>
+                </div>
+                <button disabled={updateProf.isPending} type="submit" className="btn-primary py-2 text-xs w-full">
+                  {updateProf.isPending ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </form>
+            )}
+
+            {!editingProfId && (
+              <div className="card space-y-3">
+                <h3 className="font-bold text-gray-800 text-sm mb-3">Profissionais Cadastrados</h3>
+                {professionals.length === 0 ? (
+                  <p className="text-sm text-gray-500">Nenhum profissional cadastrado.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {professionals.map(prof => (
+                      <li key={prof.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div>
+                          <p className="font-medium text-sm text-gray-800">{prof.name}</p>
+                          {(prof.profession || prof.contact_number) && (
+                            <p className="text-xs text-gray-500">
+                              {prof.profession}{prof.profession && prof.contact_number ? ' • ' : ''}{prof.contact_number}
+                            </p>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditingProfId(prof.id)
+                            setEditProfName(prof.name)
+                            setEditProfProfession(prof.profession || '')
+                            setEditProfContact(prof.contact_number || '')
+                            setEditProfNotifyNew(prof.notify_new ?? true)
+                            setEditProfNotifyCancelled(prof.notify_cancelled ?? true)
+                            setEditProfNotifyRescheduled(prof.notify_rescheduled ?? true)
+                            setEditProfNotifyUpcoming(prof.notify_upcoming ?? true)
+                          }}
+                          className="text-primary hover:text-primary-dark text-xs font-semibold px-3 py-1 bg-primary/10 rounded-full"
+                        >
+                          Editar
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Form: Horários */}

@@ -230,8 +230,21 @@ export function useUpdateAppointmentStatus() {
 export function useCreateProfessional() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: { name: string; is_active?: boolean }) => {
+    mutationFn: async (payload: Omit<Professional, 'id'>) => {
       const { data } = await api.post<Professional>('/professionals', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.professionals })
+    },
+  })
+}
+
+export function useUpdateProfessional() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: Partial<Professional> & { id: string }) => {
+      const { data } = await api.put<Professional>(`/professionals/${id}`, payload)
       return data
     },
     onSuccess: () => {

@@ -3,6 +3,12 @@ export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'complet
 export interface Professional {
   id: string
   name: string
+  profession?: string
+  contact_number?: string
+  notify_new: boolean
+  notify_cancelled: boolean
+  notify_rescheduled: boolean
+  notify_upcoming: boolean
   is_active: boolean
 }
 
