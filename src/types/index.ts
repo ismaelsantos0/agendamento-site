@@ -12,6 +12,14 @@ export interface Professional {
   is_active: boolean
 }
 
+export interface User {
+  id: string
+  username: string
+  role: 'master' | 'clinica' | 'profissional'
+  is_active: boolean
+  professional_id?: string
+}
+
 export interface AvailabilityRule {
   id: string
   professional_id: string

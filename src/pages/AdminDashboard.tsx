@@ -34,6 +34,7 @@ import {
   useCreateAppointment,
   usePatients
 } from '../hooks/useAppointments'
+import { useCurrentUser, useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '../hooks/useUsers'
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -73,6 +74,7 @@ export default function AdminDashboard() {
     filterStatus || undefined
   )
   const { data: professionals = [] } = useProfessionals()
+  const { data: currentUser } = useCurrentUser()
   const createProf = useCreateProfessional()
   const updateProf = useUpdateProfessional()
   const deleteProf = useDeleteProfessional()
@@ -119,6 +121,7 @@ export default function AdminDashboard() {
   const [showSettingsForm, setShowSettingsForm] = useState(false)
   const [showAppointmentsTab, setShowAppointmentsTab] = useState(true)
   const [showPatientsTab, setShowPatientsTab] = useState(false)
+  const [showUsersTab, setShowUsersTab] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState('60')
 
   const [cancelModalApptId, setCancelModalApptId] = useState<string | null>(null)
@@ -446,26 +449,43 @@ export default function AdminDashboard() {
         
         {/* Sessão: Abas Principais */}
         <section className="flex flex-wrap gap-2">
-          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <CalendarCheck className={`w-6 h-6 mb-2 ${showAppointmentsTab ? 'text-primary' : 'text-gray-500'}`} />
             Agenda
           </button>
-          <button onClick={() => { setShowPatientsTab(!showPatientsTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showPatientsTab ? 'bg-purple-100 border-purple-500 text-purple-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          
+          <button onClick={() => { setShowPatientsTab(!showPatientsTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showPatientsTab ? 'bg-purple-100 border-purple-500 text-purple-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <User className={`w-6 h-6 mb-2 ${showPatientsTab ? 'text-purple-600' : 'text-gray-500'}`} />
             Prontuários
           </button>
-          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-            <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
-            Profissional
-          </button>
-          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-            <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
-            Horários
-          </button>
-          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-            <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
-            Sistema
-          </button>
+
+          {currentUser?.role !== 'profissional' && (
+            <>
+              <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+                <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
+                Profissional
+              </button>
+              
+              <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+                <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
+                Horários
+              </button>
+            </>
+          )}
+
+          {currentUser?.role === 'master' && (
+            <>
+              <button onClick={() => { setShowUsersTab(!showUsersTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showUsersTab ? 'bg-indigo-100 border-indigo-500 text-indigo-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+                <User className={`w-6 h-6 mb-2 ${showUsersTab ? 'text-indigo-600' : 'text-gray-500'}`} />
+                Usuários
+              </button>
+
+              <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+                <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
+                Sistema
+              </button>
+            </>
+          )}
         </section>
 
         {/* Form: Especialista */}
@@ -1511,6 +1531,10 @@ export default function AdminDashboard() {
           <PatientsTabContent onViewHistory={(patient) => setHistoryModalPatient(patient)} />
         )}
 
+        {showUsersTab && (
+          <UsersTabContent />
+        )}
+
       </main>
 
       {/* Modal de Cancelamento */}
@@ -2101,4 +2125,110 @@ function RescheduleModalInner({
       </div>
     </div>
   );
+}
+
+function UsersTabContent() {
+  const { data: users = [], isLoading } = useUsers()
+  const { data: professionals = [] } = useProfessionals()
+  const createUser = useCreateUser()
+  const updateUser = useUpdateUser()
+  const deleteUser = useDeleteUser()
+
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'master' | 'clinica' | 'profissional'>('clinica')
+  const [professionalId, setProfessionalId] = useState('')
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!username || !password) return toast.error('Preencha os campos.')
+    
+    try {
+      await createUser.mutateAsync({
+        username,
+        password,
+        role,
+        professional_id: professionalId || undefined
+      })
+      toast.success('Usuário criado.')
+      setUsername('')
+      setPassword('')
+      setRole('clinica')
+      setProfessionalId('')
+    } catch {
+      toast.error('Erro ao criar usuário.')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja inativar o usuário?')) return
+    try {
+      await deleteUser.mutateAsync(id)
+      toast.success('Usuário inativado.')
+    } catch {
+      toast.error('Erro.')
+    }
+  }
+
+  if (isLoading) return <div>Carregando...</div>
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <form onSubmit={handleCreate} className="card space-y-4">
+        <h3 className="font-bold text-gray-800">Novo Usuário</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-bold text-gray-600">Usuário</label>
+            <input className="input-field mt-1" value={username} onChange={e => setUsername(e.target.value)} required />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-600">Senha</label>
+            <input type="password" className="input-field mt-1" value={password} onChange={e => setPassword(e.target.value)} required />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-600">Nível de Acesso</label>
+            <select className="input-field mt-1" value={role} onChange={e => setRole(e.target.value as any)}>
+              <option value="clinica">Clínica (Recepcionista)</option>
+              <option value="profissional">Profissional</option>
+              <option value="master">Master</option>
+            </select>
+          </div>
+          {role === 'profissional' && (
+            <div>
+              <label className="text-xs font-bold text-gray-600">Vincular Profissional</label>
+              <select className="input-field mt-1" value={professionalId} onChange={e => setProfessionalId(e.target.value)} required>
+                <option value="">Selecione...</option>
+                {professionals.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        <button type="submit" disabled={createUser.isPending} className="btn-primary">
+          {createUser.isPending ? 'Criando...' : 'Criar Usuário'}
+        </button>
+      </form>
+
+      <div className="card space-y-4">
+        <h3 className="font-bold text-gray-800">Usuários Cadastrados</h3>
+        <div className="space-y-2">
+          {users.map(u => (
+            <div key={u.id} className="p-3 border border-gray-100 rounded-xl flex justify-between items-center">
+              <div>
+                <p className="font-bold text-sm text-gray-800">{u.username}</p>
+                <p className="text-xs text-gray-500 uppercase">{u.role}</p>
+              </div>
+              <button onClick={() => handleDelete(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+          {users.length === 0 && <p className="text-sm text-gray-500">Nenhum usuário cadastrado.</p>}
+        </div>
+      </div>
+    </div>
+  )
 }
