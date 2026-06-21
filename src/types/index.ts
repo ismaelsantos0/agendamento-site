@@ -36,12 +36,15 @@ export interface CreateAppointmentPayload {
 }
 
 export interface ClinicSettings {
-  id: string
-  appointment_duration_minutes: number
-  msg_created?: string
-  msg_confirmation?: string
-  msg_feedback_confirmed?: string
-  msg_feedback_cancelled?: string
+  id: string;
+  clinic_name: string | null;
+  address: string | null;
+  opening_hours: string | null;
+  appointment_duration_minutes: number;
+  msg_created: string | null;
+  msg_confirmation: string | null;
+  msg_feedback_confirmed: string | null;
+  msg_feedback_cancelled: string | null;
 }
 
 export interface Blockout {

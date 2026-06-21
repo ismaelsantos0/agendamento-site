@@ -117,6 +117,12 @@ export default function AdminDashboard() {
   const [msgConfirmation, setMsgConfirmation] = useState('')
   const [msgFeedbackConfirmed, setMsgFeedbackConfirmed] = useState('')
   const [msgFeedbackCancelled, setMsgFeedbackCancelled] = useState('')
+  const [clinicName, setClinicName] = useState('')
+  const [address, setAddress] = useState('')
+  const [openingHours, setOpeningHours] = useState('')
+  
+  // Abas de Configuração (quando showSettingsForm é true)
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'general' | 'whatsapp'>('company')
 
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
@@ -126,6 +132,9 @@ export default function AdminDashboard() {
       setMsgConfirmation(settings.msg_confirmation || '')
       setMsgFeedbackConfirmed(settings.msg_feedback_confirmed || '')
       setMsgFeedbackCancelled(settings.msg_feedback_cancelled || '')
+      setClinicName(settings.clinic_name || '')
+      setAddress(settings.address || '')
+      setOpeningHours(settings.opening_hours || '')
     }
   }, [settings])
 
@@ -248,13 +257,16 @@ export default function AdminDashboard() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
     const minutes = parseInt(durationMinutes)
-    if (isNaN(minutes) || minutes < 5) {
+    if (isNaN(minutes) || minutes < 15) {
       toast.error('Duração inválida.')
       return
     }
     try {
       await updateSettings.mutateAsync({ 
         appointment_duration_minutes: minutes,
+        clinic_name: clinicName,
+        address: address,
+        opening_hours: openingHours,
         msg_created: msgCreated.trim() || undefined,
         msg_confirmation: msgConfirmation.trim() || undefined,
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
@@ -293,23 +305,19 @@ export default function AdminDashboard() {
         
         {/* Sessão: Abas Principais */}
         <section className="flex flex-wrap gap-2">
-          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <CalendarCheck className={`w-6 h-6 mb-2 ${showAppointmentsTab ? 'text-primary' : 'text-gray-500'}`} />
             Agendamentos
           </button>
-          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
             Especialista
           </button>
-          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
             Horários
           </button>
-          <button onClick={() => { setShowWhatsAppTab(!showWhatsAppTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showWhatsAppTab ? 'bg-green-50 border-green-500 text-green-600' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-            <MessageCircle className={`w-6 h-6 mb-2 ${showWhatsAppTab ? 'text-green-600' : 'text-gray-500'}`} />
-            WhatsApp
-          </button>
-          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowWhatsAppTab(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+          <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); }} className={`flex-1 min-w-[120px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
             Configurações
           </button>
@@ -421,34 +429,67 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Form: Configurações */}
+        {/* Painel Central de Configurações */}
         {showSettingsForm && (
-          <form onSubmit={handleSaveSettings} className="card animate-fade-in space-y-3 border border-gray-200 bg-gray-50/50">
-            <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-              <Settings className="w-4 h-4 text-gray-500" />
-              Configurações Gerais
-            </h3>
-            <div>
-              <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Duração de cada Consulta (em minutos)</label>
-              <select className="input-field py-2" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)}>
-                <option value="15">15 Minutos</option>
-                <option value="20">20 Minutos</option>
-                <option value="30">30 Minutos</option>
-                <option value="45">45 Minutos</option>
-                <option value="60">1 Hora (60 min)</option>
-                <option value="90">1 Hora e meia (90 min)</option>
-                <option value="120">2 Horas (120 min)</option>
-              </select>
-            </div>
-            <button disabled={updateSettings.isPending} type="submit" className="btn-primary bg-gray-800 hover:bg-gray-900 py-2 text-xs mt-2">
-              {updateSettings.isPending ? 'Salvando...' : 'Salvar Configuração'}
-            </button>
-          </form>
-        )}
+          <div className="card animate-fade-in space-y-6 border border-gray-200 bg-gray-50/50">
+            <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2 border-b pb-3 border-gray-200">
+              <Settings className="w-5 h-5 text-gray-500" />
+              Central de Configurações
+            </h2>
 
-        {/* Aba: WhatsApp */}
-        {showWhatsAppTab && (
-          <div className="space-y-6 animate-fade-in">
+            {/* Abas Internas */}
+            <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
+              <button onClick={() => setActiveSettingsTab('company')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'company' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Dados da Empresa</button>
+              <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
+              <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
+            </div>
+
+            {/* Conteúdo das Abas */}
+            
+            {activeSettingsTab === 'company' && (
+              <form onSubmit={handleSaveSettings} className="space-y-4 animate-fade-in bg-white p-4 rounded-xl border border-gray-200">
+                <h3 className="font-bold text-gray-800 text-sm">Dados da Clínica</h3>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Nome da Clínica / Empresa</label>
+                  <input className="input-field" value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Ex: Clínica Saúde Ideal" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Endereço Completo</label>
+                  <input className="input-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="Ex: Av. Paulista, 1000 - São Paulo, SP" />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Horário de Funcionamento</label>
+                  <input className="input-field" value={openingHours} onChange={e => setOpeningHours(e.target.value)} placeholder="Ex: Seg a Sex, das 08:00 às 18:00" />
+                </div>
+                <button disabled={updateSettings.isPending} type="submit" className="btn-primary w-full sm:w-auto py-2 text-xs mt-2">
+                  {updateSettings.isPending ? 'Salvando...' : 'Salvar Dados'}
+                </button>
+              </form>
+            )}
+
+            {activeSettingsTab === 'general' && (
+              <form onSubmit={handleSaveSettings} className="space-y-4 animate-fade-in bg-white p-4 rounded-xl border border-gray-200">
+                <h3 className="font-bold text-gray-800 text-sm">Regras de Agendamento</h3>
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Duração de cada Consulta (em minutos)</label>
+                  <select className="input-field py-2" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)}>
+                    <option value="15">15 Minutos</option>
+                    <option value="20">20 Minutos</option>
+                    <option value="30">30 Minutos</option>
+                    <option value="45">45 Minutos</option>
+                    <option value="60">1 Hora (60 min)</option>
+                    <option value="90">1 Hora e meia (90 min)</option>
+                    <option value="120">2 Horas (120 min)</option>
+                  </select>
+                </div>
+                <button disabled={updateSettings.isPending} type="submit" className="btn-primary bg-gray-800 hover:bg-gray-900 w-full sm:w-auto py-2 text-xs mt-2">
+                  {updateSettings.isPending ? 'Salvando...' : 'Salvar Configuração'}
+                </button>
+              </form>
+            )}
+
+            {activeSettingsTab === 'whatsapp' && (
+              <div className="space-y-6 animate-fade-in bg-white p-4 rounded-xl border border-gray-200">
             {/* Status */}
             <div className="card flex items-center justify-between border-2 border-green-500/20 shadow-green-500/5 shadow-lg">
               <div className="flex items-center gap-3">
@@ -656,6 +697,8 @@ export default function AdminDashboard() {
                 {updateSettings.isPending ? 'Salvando...' : 'Salvar Textos Personalizados'}
               </button>
             </form>
+          </div>
+        )}
           </div>
         )}
 
