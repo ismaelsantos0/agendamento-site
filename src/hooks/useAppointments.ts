@@ -10,6 +10,7 @@ export const queryKeys = {
   },
   settings: ['settings'] as const,
   blockouts: (professionalId?: string) => professionalId ? ['blockouts', professionalId] as const : ['blockouts'] as const,
+  services: ['services'] as const,
 }
 
 // ─── Queries ─────────────────────────────────────────────────────────────
@@ -63,7 +64,68 @@ export function useSettings() {
   })
 }
 
+export function useServices() {
+  return useQuery({
+    queryKey: queryKeys.services,
+    queryFn: async () => {
+      const { data } = await api.get<ServiceItem[]>('/services')
+      return data
+    },
+  })
+}
+
 // ─── Mutations ───────────────────────────────────────────────────────────
+
+export function useCreateService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: Omit<ServiceItem, 'id'>) => {
+      const { data } = await api.post<ServiceItem>('/services', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.services })
+    },
+  })
+}
+
+export function useUpdateService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: ServiceItem) => {
+      const { data } = await api.put<ServiceItem>(`/services/${id}`, payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.services })
+    },
+  })
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/services/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.services })
+    },
+  })
+}
+
+export function useSyncServices() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (services: Partial<ServiceItem>[]) => {
+      const { data } = await api.put<ServiceItem[]>('/services/sync', services)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.services })
+    },
+  })
+}
 
 export function useCreateAppointment() {
   const queryClient = useQueryClient()

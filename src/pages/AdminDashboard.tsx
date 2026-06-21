@@ -12,6 +12,8 @@ import {
   useCreateAvailabilityRule, 
   useSettings, 
   useUpdateSettings,
+  useServices,
+  useSyncServices,
   useDeleteAvailabilityRule,
   useBlockouts,
   useCreateBlockout,
@@ -88,6 +90,9 @@ export default function AdminDashboard() {
 
   const { data: settings } = useSettings()
   const updateSettings = useUpdateSettings()
+  const { data: dbServices = [] } = useServices()
+  const syncServices = useSyncServices()
+  
   const [showSettingsForm, setShowSettingsForm] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState('60')
 
@@ -154,11 +159,14 @@ export default function AdminDashboard() {
       try {
         if (settings.opening_hours) setWeeklySchedule(JSON.parse(settings.opening_hours))
       } catch { /* legacy string */ }
-      try {
-        if (settings.services) setServicesList(JSON.parse(settings.services))
-      } catch { /* legacy string */ }
     }
   }, [settings])
+
+  useEffect(() => {
+    if (dbServices && dbServices.length > 0) {
+      setServicesList(dbServices)
+    }
+  }, [dbServices])
 
   const buscarCep = async () => {
     const cepNumbers = addressInfo.cep.replace(/\D/g, '')
@@ -312,20 +320,28 @@ export default function AdminDashboard() {
         clinic_name: clinicName,
         address: JSON.stringify(addressInfo),
         opening_hours: JSON.stringify(weeklySchedule),
-        services: JSON.stringify(servicesList),
         msg_created: msgCreated.trim() || undefined,
         msg_confirmation: msgConfirmation.trim() || undefined,
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
         msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined
       })
-      toast.success('Configurações salvas!')
+      toast.success('Configurações gerais salvas!')
       setShowSettingsForm(false)
     } catch {
-      toast.error('Erro ao salvar configurações.')
+      toast.error('Erro ao salvar configurações gerais.')
     }
   }
 
-  const handleLogout = () => {
+  const handleSaveServices = async () => {
+    try {
+      await syncServices.mutateAsync(servicesList);
+      toast.success('Serviços salvos com sucesso!');
+    } catch {
+      toast.error('Erro ao salvar serviços.');
+    }
+  }
+
+  const handleDeleteProf = async (id: string) => {
     localStorage.removeItem('@agendamentos:token')
     setIsAuthenticated(false)
   }
@@ -685,8 +701,8 @@ export default function AdminDashboard() {
                   </div>
                 )}
                 <div className="pt-2">
-                  <button onClick={handleSaveSettings} disabled={updateSettings.isPending} className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
-                    {updateSettings.isPending ? 'Salvando...' : 'Salvar Serviços'}
+                  <button onClick={handleSaveServices} disabled={syncServices.isPending} className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
+                    {syncServices.isPending ? 'Salvando...' : 'Salvar Serviços'}
                   </button>
                 </div>
               </div>

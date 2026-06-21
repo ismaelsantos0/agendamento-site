@@ -4,12 +4,13 @@ import { format, addMinutes, setHours, setMinutes, parseISO, addDays } from 'dat
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
-import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp } from '../hooks/useAppointments';
+import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp, useServices } from '../hooks/useAppointments';
 import { ServiceItem } from '../types';
 
 export default function SchedulingPage() {
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
   const { data: settings } = useSettings();
+  const { data: dbServices = [] } = useServices();
   const createAppointment = useCreateAppointment();
   const sendOtp = useSendOtp();
 
@@ -58,13 +59,8 @@ export default function SchedulingPage() {
   const { data: dayAppointments = [] } = useAppointments(selectedProfId, dateStr);
 
   const availableServices = useMemo(() => {
-    if (!settings?.services) return [];
-    try {
-      return JSON.parse(settings.services) as ServiceItem[];
-    } catch {
-      return [];
-    }
-  }, [settings?.services]);
+    return dbServices;
+  }, [dbServices]);
 
   const filteredProfessionals = useMemo(() => {
     if (!selectedService || availableServices.length === 0) return professionals;
