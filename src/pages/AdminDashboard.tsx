@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2 } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
     filterStatus || undefined
   )
   const { data: professionals = [] } = useProfessionals()
-  const { data: currentUser } = useCurrentUser()
+  const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
   const createProf = useCreateProfessional()
   const updateProf = useUpdateProfessional()
   const deleteProf = useDeleteProfessional()
@@ -262,6 +262,18 @@ export default function AdminDashboard() {
   }, [awaitingConfirmationReply, testConfirmationAppt])
 
   if (!isAuthenticated) return <LoginPage onLogin={() => setIsAuthenticated(true)} />
+
+  // Bloqueia o render até o perfil do usuário ser carregado do servidor.
+  // Sem isso, no primeiro render currentUser é undefined e todas as abas
+  // aparecem para todos os perfis por uma fração de segundo.
+  if (isLoadingUser) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3 text-gray-400">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-medium">Carregando painel...</p>
+      </div>
+    </div>
+  )
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
