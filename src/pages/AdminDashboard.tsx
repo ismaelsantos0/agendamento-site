@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2 } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -37,6 +38,7 @@ import {
 import { useCurrentUser, useUsers, useCreateUser, useDeleteUser } from '../hooks/useUsers'
 
 export default function AdminDashboard() {
+  const queryClient = useQueryClient()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [calendarView, setCalendarView] = useState<'list' | 'week' | 'day'>('week')
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
@@ -209,6 +211,13 @@ export default function AdminDashboard() {
       setServicesList(dbServices)
     }
   }, [dbServices])
+
+  useEffect(() => {
+    if (currentUser?.role === 'profissional' && currentUser.professional_id) {
+      setFilterProfessional(currentUser.professional_id)
+      setRuleProfId(currentUser.professional_id)
+    }
+  }, [currentUser])
 
   const buscarCep = async () => {
     const cepNumbers = addressInfo.cep.replace(/\D/g, '')
@@ -431,22 +440,30 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = () => {
+    // Limpa token e TODOS os dados em cache para garantir que o próximo
+    // usuário não veja dados do usuário anterior
     localStorage.removeItem('@agendamentos:token')
-    window.location.reload()
+    sessionStorage.clear()
+    queryClient.clear()
+    window.location.href = window.location.pathname
   }
 
-  const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
-
-  return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+  const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'S�    <div className="min-h-screen bg-gray-50 pb-20">
       <header className="bg-primary text-white pt-12 pb-6 px-6 rounded-b-[2rem] flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
             <Calendar className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-lg font-bold">Gestão</h1>
+          <div>
+            <h1 className="text-lg font-bold">Gestão</h1>
+            {currentUser && (
+              <p className="text-xs text-white/70 capitalize">
+                {currentUser.role === 'master' ? '👑 Master' : currentUser.role === 'clinica' ? '🏥 Clínica' : '👨‍⚕️ Profissional'}
+              </p>
+            )}
+          </div>
         </div>
-        <button onClick={handleLogout} className="p-2 bg-white/10 rounded-lg">
+        <button onClick={handleLogout} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
           <LogOut className="w-5 h-5 text-white" />
         </button>
       </header>
@@ -455,43 +472,49 @@ export default function AdminDashboard() {
         
         {/* Sessão: Abas Principais */}
         <section className="flex flex-wrap gap-2">
+
+          {/* AGENDA — todos os perfis veem */}
           <button onClick={() => { setShowAppointmentsTab(!showAppointmentsTab); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showAppointmentsTab ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <CalendarCheck className={`w-6 h-6 mb-2 ${showAppointmentsTab ? 'text-primary' : 'text-gray-500'}`} />
             Agenda
           </button>
           
+          {/* PRONTUÁRIOS — todos os perfis veem */}
           <button onClick={() => { setShowPatientsTab(!showPatientsTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showPatientsTab ? 'bg-purple-100 border-purple-500 text-purple-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
             <User className={`w-6 h-6 mb-2 ${showPatientsTab ? 'text-purple-600' : 'text-gray-500'}`} />
             Prontuários
           </button>
 
+          {/* PROFISSIONAIS — apenas master e clinica */}
           {currentUser?.role !== 'profissional' && (
-            <>
-              <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-                <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
-                Profissional
-              </button>
-              
-              <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-                <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
-                Horários
-              </button>
-            </>
+            <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+              <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
+              Profissionais
+            </button>
           )}
 
+          {/* HORÁRIOS — todos os perfis veem (profissional vê só o próprio) */}
+          <button onClick={() => { setShowRuleForm(!showRuleForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showRuleForm ? 'bg-secondary-dark/10 border-secondary-dark text-secondary-dark' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+            <Clock className={`w-6 h-6 mb-2 ${showRuleForm ? 'text-secondary-dark' : 'text-gray-500'}`} />
+            Horários
+          </button>
+
+          {/* USUÁRIOS — apenas master */}
           {currentUser?.role === 'master' && (
-            <>
-              <button onClick={() => { setShowUsersTab(!showUsersTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showUsersTab ? 'bg-indigo-100 border-indigo-500 text-indigo-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-                <User className={`w-6 h-6 mb-2 ${showUsersTab ? 'text-indigo-600' : 'text-gray-500'}`} />
-                Usuários
-              </button>
-
-              <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
-                <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
-                Sistema
-              </button>
-            </>
+            <button onClick={() => { setShowUsersTab(!showUsersTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showUsersTab ? 'bg-indigo-100 border-indigo-500 text-indigo-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+              <User className={`w-6 h-6 mb-2 ${showUsersTab ? 'text-indigo-600' : 'text-gray-500'}`} />
+              Usuários
+            </button>
           )}
+
+          {/* CONFIGURAÇÕES — master (Sistema completo) e clinica (só Perfil/Dados da Empresa) */}
+          {currentUser?.role !== 'profissional' && (
+            <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowPatientsTab(false); setShowUsersTab(false); setActiveSettingsTab('company'); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
+              <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
+              {currentUser?.role === 'master' ? 'Sistema' : 'Perfil'}
+            </button>
+          )}
+        </section>    )}
         </section>
 
         {/* Form: Especialista */}
@@ -647,10 +670,12 @@ export default function AdminDashboard() {
           <div className="card animate-fade-in space-y-6">
             <div className="space-y-3">
               <h3 className="font-bold text-gray-800 text-sm">Gerenciar Horários e Pausas</h3>
-              <select className="input-field py-2" value={ruleProfId} onChange={e => setRuleProfId(e.target.value)}>
-                <option value="">Selecione o profissional...</option>
-                {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+              {currentUser?.role !== 'profissional' && (
+                <select className="input-field py-2" value={ruleProfId} onChange={e => setRuleProfId(e.target.value)}>
+                  <option value="">Selecione o profissional...</option>
+                  {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              )}
             </div>
 
             {ruleProfId && (
@@ -743,9 +768,13 @@ export default function AdminDashboard() {
             {/* Abas Internas */}
             <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
               <button onClick={() => setActiveSettingsTab('company')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'company' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Dados da Empresa</button>
-              <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
-              <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
-              <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
+              {currentUser?.role === 'master' && (
+                <>
+                  <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
+                  <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
+                  <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
+                </>
+              )}
             </div>
 
             {/* Conteúdo das Abas */}
