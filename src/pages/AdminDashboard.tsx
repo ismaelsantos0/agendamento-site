@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2 } from 'lucide-react'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -10,6 +10,7 @@ import {
   useProfessionals, 
   useCreateProfessional, 
   useUpdateProfessional,
+  useDeleteProfessional,
   useCreateAvailabilityRule, 
   useSettings, 
   useUpdateSettings,
@@ -74,6 +75,7 @@ export default function AdminDashboard() {
   const { data: professionals = [] } = useProfessionals()
   const createProf = useCreateProfessional()
   const updateProf = useUpdateProfessional()
+  const deleteProf = useDeleteProfessional()
   const createRule = useCreateAvailabilityRule()
   const deleteRule = useDeleteAvailabilityRule()
   const createBlockout = useCreateBlockout()
@@ -307,12 +309,24 @@ export default function AdminDashboard() {
         notify_new: editProfNotifyNew,
         notify_cancelled: editProfNotifyCancelled,
         notify_rescheduled: editProfNotifyRescheduled,
-        notify_upcoming: editProfNotifyUpcoming
+        notify_upcoming: editProfNotifyUpcoming,
+        is_active: true
       })
       toast.success('Profissional atualizado!')
       setEditingProfId(null)
     } catch {
       toast.error('Erro ao atualizar profissional.')
+    }
+  }
+
+  const handleDeleteProfessional = async (profId: string) => {
+    if (!window.confirm('Tem certeza que deseja apagar este profissional? Isso irá ocultá-lo da lista.')) return
+    try {
+      await deleteProf.mutateAsync(profId)
+      toast.success('Profissional removido!')
+      setEditingProfId(null)
+    } catch {
+      toast.error('Erro ao remover profissional.')
     }
   }
 
@@ -483,12 +497,17 @@ export default function AdminDashboard() {
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleEditProfessional} className="card space-y-4">
+              <form onSubmit={handleEditProfessional} className="card space-y-4 relative">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-gray-800 text-sm">Editar Profissional</h3>
-                  <button type="button" onClick={() => setEditingProfId(null)} className="text-gray-400 hover:text-gray-600">
-                    <XCircle className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => handleDeleteProfessional(editingProfId)} className="text-red-400 hover:text-red-600 p-1" title="Apagar">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                    <button type="button" onClick={() => setEditingProfId(null)} className="text-gray-400 hover:text-gray-600 p-1">
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <input 

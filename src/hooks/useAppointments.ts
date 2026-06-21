@@ -253,6 +253,18 @@ export function useUpdateProfessional() {
   })
 }
 
+export function useDeleteProfessional() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/professionals/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.professionals })
+    },
+  })
+}
+
 export function useCreateAvailabilityRule() {
   const queryClient = useQueryClient()
   return useMutation({
