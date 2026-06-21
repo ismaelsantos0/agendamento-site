@@ -37,9 +37,28 @@ import {
 } from '../hooks/useAppointments'
 import { useCurrentUser, useUsers, useCreateUser, useDeleteUser } from '../hooks/useUsers'
 
+// Decodifica o payload do JWT para obter o role imediatamente,
+// sem precisar esperar a chamada /auth/me. O JWT e base64 e pode
+// ser lido no cliente com seguranca (apenas validado no servidor).
+function decodificarToken(): { role?: string; professional_id?: string } {
+  try {
+    const token = localStorage.getItem('@agendamentos:token')
+    if (!token) return {}
+    const payload = token.split('.')[1]
+    return JSON.parse(atob(payload))
+  } catch {
+    return {}
+  }
+}
+
 export default function AdminDashboard() {
   const queryClient = useQueryClient()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  // Role decodificado instantaneamente do token JWT local
+  // Usado para renderizar os menus CORRETOS desde o primeiro frame,
+  // evitando qualquer flash de menus errados durante o carregamento.
+  const [roleInicial] = useState<string>(() => decodificarToken().role || '')
+  const [profIdInicial] = useState<string>(() => decodificarToken().professional_id || '')
   const [calendarView, setCalendarView] = useState<'list' | 'week' | 'day'>('week')
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
   const [filterPeriod, setFilterPeriod] = useState<'hoje' | 'semana' | 'mes' | 'todos'>('hoje')
@@ -77,6 +96,9 @@ export default function AdminDashboard() {
   )
   const { data: professionals = [] } = useProfessionals()
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
+  // Usa o role do servidor se disponivel, caso contrario usa o do token JWT
+  const role = currentUser?.role || roleInicial
+  const profId = currentUser?.professional_id || profIdInicial
   const createProf = useCreateProfessional()
   const updateProf = useUpdateProfessional()
   const deleteProf = useDeleteProfessional()
@@ -213,9 +235,11 @@ export default function AdminDashboard() {
   }, [dbServices])
 
   useEffect(() => {
-    if (currentUser?.role === 'profissional' && currentUser.professional_id) {
-      setFilterProfessional(currentUser.professional_id)
-      setRuleProfId(currentUser.professional_id)
+    // Usa profIdInicial (do JWT) caso currentUser ainda nao chegou
+    const id = currentUser?.professional_id || profIdInicial
+    if ((role === 'profissional' || roleInicial === 'profissional') && id) {
+      setFilterProfessional(id)
+      setRuleProfId(id)
     }
   }, [currentUser])
 
@@ -471,10 +495,8 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="text-lg font-bold">Gestão</h1>
-            {currentUser && (
-              <p className="text-xs text-white/70 capitalize">
-              <p className="text-xs text-white/70 capitalize">{currentUser.role === 'master' ? 'Master' : currentUser.role === 'clinica' ? 'Clinica' : 'Profissional'}</p>
-              </p>
+            {role && (
+              <p className="text-xs text-white/70 capitalize">{role === 'master' ? 'Master' : role === 'clinica' ? 'Clinica' : 'Profissional'}</p>
             )}
           </div>
         </div>
@@ -501,7 +523,7 @@ export default function AdminDashboard() {
           </button>
 
           {/* PROFISSIONAIS — apenas master e clinica */}
-          {currentUser?.role !== 'profissional' && (
+          {role !== 'profissional' && (
             <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
               <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
               Profissionais
@@ -515,7 +537,7 @@ export default function AdminDashboard() {
           </button>
 
           {/* USUÁRIOS — apenas master */}
-          {currentUser?.role === 'master' && (
+          {role === 'master' && (
             <button onClick={() => { setShowUsersTab(!showUsersTab); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showUsersTab ? 'bg-indigo-100 border-indigo-500 text-indigo-700' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
               <User className={`w-6 h-6 mb-2 ${showUsersTab ? 'text-indigo-600' : 'text-gray-500'}`} />
               Usuários
@@ -523,10 +545,10 @@ export default function AdminDashboard() {
           )}
 
           {/* CONFIGURAÇÕES — master (Sistema completo) e clinica (só Perfil/Dados da Empresa) */}
-          {currentUser?.role !== 'profissional' && (
+          {role !== 'profissional' && (
             <button onClick={() => { setShowSettingsForm(!showSettingsForm); setShowAppointmentsTab(false); setShowProfForm(false); setShowRuleForm(false); setShowPatientsTab(false); setShowUsersTab(false); setActiveSettingsTab('company'); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showSettingsForm ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
               <Settings className={`w-6 h-6 mb-2 ${showSettingsForm ? 'text-white' : 'text-gray-500'}`} />
-              {currentUser?.role === 'master' ? 'Sistema' : 'Perfil'}
+              {role === 'master' ? 'Sistema' : 'Perfil'}
             </button>
           )}
         </section>
@@ -610,7 +632,7 @@ export default function AdminDashboard() {
                     <input type="checkbox" checked={editProfNotifyUpcoming} onChange={e => setEditProfNotifyUpcoming(e.target.checked)} className="rounded text-primary" />
                     <span className="text-sm text-gray-700">Lembretes de Consultas</span>
                   </label>
-                  {(currentUser?.role === 'master' || settings?.allow_custom_links) && (
+                  {(role === 'master' || settings?.allow_custom_links) && (
                     <label className="flex items-center gap-2 cursor-pointer mt-4 pt-4 border-t border-gray-100">
                       <input type="checkbox" checked={editProfHasCustomLink} onChange={e => setEditProfHasCustomLink(e.target.checked)} className="rounded text-primary" />
                       <span className="text-sm font-bold text-gray-800">Habilitar Link Exclusivo (SaaS)</span>
@@ -684,7 +706,7 @@ export default function AdminDashboard() {
           <div className="card animate-fade-in space-y-6">
             <div className="space-y-3">
               <h3 className="font-bold text-gray-800 text-sm">Gerenciar Horários e Pausas</h3>
-              {currentUser?.role !== 'profissional' && (
+              {role !== 'profissional' && (
                 <select className="input-field py-2" value={ruleProfId} onChange={e => setRuleProfId(e.target.value)}>
                   <option value="">Selecione o profissional...</option>
                   {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -782,7 +804,7 @@ export default function AdminDashboard() {
             {/* Abas Internas */}
             <div className="flex bg-gray-200/50 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
               <button onClick={() => setActiveSettingsTab('company')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'company' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Dados da Empresa</button>
-              {currentUser?.role === 'master' && (
+              {role === 'master' && (
                 <>
                   <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
                   <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
@@ -1034,7 +1056,7 @@ export default function AdminDashboard() {
                     <option value="120">2 Horas (120 min)</option>
                   </select>
                 </div>
-                {currentUser?.role === 'master' && (
+                {role === 'master' && (
                   <div className="md:col-span-12 mt-4 pt-4 border-t border-gray-100">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={allowCustomLinks} onChange={e => setAllowCustomLinks(e.target.checked)} className="rounded text-primary" />
@@ -1345,7 +1367,7 @@ export default function AdminDashboard() {
               <div className="flex-1">
                 <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Especialista</label>
                 <select className="input-field py-1.5 text-sm" value={filterProfessional} onChange={e => setFilterProfessional(e.target.value)}>
-                  {currentUser?.role !== 'profissional' && <option value="">Todos os especialistas</option>}
+                  {role !== 'profissional' && <option value="">Todos os especialistas</option>}
                   {professionals.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
