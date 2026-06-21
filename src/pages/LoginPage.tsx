@@ -20,8 +20,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
       })
       
       localStorage.setItem('@agendamentos:token', data.access_token)
-      onLogin()
-      toast.success('Acesso liberado!')
+      window.location.reload()
     } catch {
       toast.error('Usuário ou senha inválidos.')
     } finally {
