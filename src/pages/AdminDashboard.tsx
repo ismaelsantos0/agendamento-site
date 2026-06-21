@@ -24,7 +24,11 @@ import {
   useWhatsAppQR,
   useTestWhatsApp,
   useTestConfirmationMessage,
-  useAppointmentById
+  useAppointmentById,
+  useRescheduleAppointment,
+  useCompleteAppointment,
+  usePatientHistory,
+  useCreateAppointment
 } from '../hooks/useAppointments'
 
 export default function AdminDashboard() {
@@ -101,7 +105,20 @@ export default function AdminDashboard() {
   const [cancelReason, setCancelReason] = useState('')
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
 
+  const [rescheduleModalAppt, setRescheduleModalAppt] = useState<Appointment | null>(null)
+  const [rescheduleDate, setRescheduleDate] = useState<Date | null>(null)
+  const [rescheduleTime, setRescheduleTime] = useState('')
+
+  const [completeModalAppt, setCompleteModalAppt] = useState<Appointment | null>(null)
+  const [clinicalNotes, setClinicalNotes] = useState('')
+  const [returnDays, setReturnDays] = useState('')
+
+  const [historyModalPatient, setHistoryModalPatient] = useState<{name: string, phone: string} | null>(null)
+
   const updateAppointmentStatus = useUpdateAppointmentStatus()
+  const rescheduleAppointment = useRescheduleAppointment()
+  const completeAppointment = useCompleteAppointment()
+  const createAppointment = useCreateAppointment()
 
   // Estados do WhatsApp
   const { data: wpStatus, refetch: refetchWpStatus } = useWhatsAppStatus()
@@ -1384,15 +1401,50 @@ export default function AdminDashboard() {
             </div>
 
             {/* Ações Rápidas */}
-            <div className="flex gap-2 pt-2 border-t border-gray-100">
-              <button 
-                onClick={() => setSelectedAppt(null)}
-                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors"
-              >
-                Fechar
-              </button>
+            <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setSelectedAppt(null)}
+                  className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Fechar
+                </button>
+                <button 
+                  onClick={() => {
+                    setHistoryModalPatient({ name: selectedAppt.customer_name, phone: selectedAppt.customer_phone });
+                    setSelectedAppt(null);
+                  }}
+                  className="flex-1 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl font-bold text-sm transition-colors"
+                >
+                  Ver Histórico
+                </button>
+              </div>
+
+              {selectedAppt.status !== 'completed' && selectedAppt.status !== 'cancelled' && (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      setRescheduleModalAppt(selectedAppt);
+                      setSelectedAppt(null);
+                    }}
+                    className="flex-1 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl font-bold text-sm transition-colors"
+                  >
+                    Remarcar
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setCompleteModalAppt(selectedAppt);
+                      setSelectedAppt(null);
+                    }}
+                    className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-colors"
+                  >
+                    Concluir Consulta
+                  </button>
+                </div>
+              )}
+
               {selectedAppt.status === 'pending' && (
-                <>
+                <div className="flex gap-2">
                   <button 
                     onClick={async () => {
                       await handleStatusChange(selectedAppt.id, 'confirmed');
@@ -1413,12 +1465,210 @@ export default function AdminDashboard() {
                   >
                     Cancelar
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
+      {/* Reschedule Modal */}
+      {rescheduleModalAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Remarcar Consulta</h3>
+            <p className="text-sm text-gray-600 mb-4">Escolha a nova data e horário. O paciente receberá um aviso no WhatsApp exigindo confirmação.</p>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase">Nova Data</label>
+                <input 
+                  type="date" 
+                  value={rescheduleDate ? format(rescheduleDate, 'yyyy-MM-dd') : ''}
+                  onChange={e => setRescheduleDate(e.target.value ? new Date(e.target.value + 'T12:00:00') : null)}
+                  className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase">Novo Horário</label>
+                <input 
+                  type="time" 
+                  value={rescheduleTime}
+                  onChange={e => setRescheduleTime(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setRescheduleModalAppt(null)}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={async () => {
+                  if (!rescheduleDate || !rescheduleTime) {
+                    toast.error("Selecione data e hora.");
+                    return;
+                  }
+                  const [h, m] = rescheduleTime.split(':').map(Number);
+                  const newStart = setMinutes(setHours(rescheduleDate, h), m);
+                  
+                  try {
+                    await rescheduleAppointment.mutateAsync({
+                      id: rescheduleModalAppt.id,
+                      start_time: newStart.toISOString()
+                    });
+                    toast.success("Consulta remarcada e mensagem enviada!");
+                    setRescheduleModalAppt(null);
+                  } catch (err: any) {
+                    toast.error(err.response?.data?.detail || "Erro ao remarcar");
+                  }
+                }}
+                disabled={rescheduleAppointment.isPending}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {rescheduleAppointment.isPending ? 'Salvando...' : 'Confirmar e Avisar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Modal */}
+      {completeModalAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Concluir Consulta</h3>
+            <p className="text-sm text-gray-600 mb-4">Registre o que foi feito no atendimento de {completeModalAppt.customer_name}.</p>
+            
+            <textarea
+              placeholder="Anotações do prontuário (Opcional)"
+              value={clinicalNotes}
+              onChange={e => setClinicalNotes(e.target.value)}
+              className="w-full h-32 p-3 border border-gray-200 rounded-xl mb-4 focus:ring-2 focus:ring-emerald-500 outline-none resize-none text-sm"
+            />
+
+            <div className="mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+              <label className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2">
+                <CalendarCheck className="w-4 h-4" /> Marcar Retorno
+              </label>
+              <select
+                value={returnDays}
+                onChange={e => setReturnDays(e.target.value)}
+                className="w-full p-2 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              >
+                <option value="">Não agendar agora</option>
+                <option value="15">Em 15 dias</option>
+                <option value="30">Em 30 dias</option>
+                <option value="60">Em 60 dias</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setCompleteModalAppt(null)}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    await completeAppointment.mutateAsync({
+                      id: completeModalAppt.id,
+                      clinical_notes: clinicalNotes
+                    });
+
+                    if (returnDays) {
+                      const days = parseInt(returnDays);
+                      const returnDate = addDays(parseISO(completeModalAppt.start_time), days);
+                      
+                      await createAppointment.mutateAsync({
+                        professional_id: completeModalAppt.professional_id,
+                        customer_name: completeModalAppt.customer_name,
+                        customer_phone: completeModalAppt.customer_phone,
+                        start_time: returnDate.toISOString(),
+                        service_name: completeModalAppt.service_name || undefined
+                      });
+                      toast.success(`Retorno agendado para daqui a ${days} dias!`);
+                    }
+
+                    toast.success("Consulta concluída!");
+                    setCompleteModalAppt(null);
+                    setClinicalNotes('');
+                    setReturnDays('');
+                  } catch (err: any) {
+                    toast.error(err.response?.data?.detail || "Erro ao concluir");
+                  }
+                }}
+                disabled={completeAppointment.isPending || createAppointment.isPending}
+                className="flex-1 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+              >
+                {(completeAppointment.isPending || createAppointment.isPending) ? 'Salvando...' : 'Salvar Conclusão'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Patient History Modal */}
+      {historyModalPatient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Histórico Clínico</h3>
+                <p className="text-sm text-gray-500">{historyModalPatient.name} • {historyModalPatient.phone}</p>
+              </div>
+              <button 
+                onClick={() => setHistoryModalPatient(null)} 
+                className="p-1.5 hover:bg-gray-100 rounded-xl text-gray-400 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <PatientHistoryList phone={historyModalPatient.phone} name={historyModalPatient.name} />
+            
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+function PatientHistoryList({ phone, name }: { phone: string, name: string }) {
+  const { data: history = [], isLoading } = usePatientHistory(phone, name);
+
+  if (isLoading) return <div className="p-8 text-center text-gray-500">Buscando histórico...</div>;
+  
+  if (history.length === 0) return <div className="p-8 text-center text-gray-500">Nenhum histórico encontrado.</div>;
+
+  return (
+    <div className="overflow-y-auto pr-2 space-y-4">
+      {history.map(appt => (
+        <div key={appt.id} className="border-l-2 border-purple-200 pl-4 py-1 relative">
+          <div className="absolute w-2.5 h-2.5 bg-purple-500 rounded-full -left-[5px] top-2" />
+          <p className="text-xs font-bold text-purple-600 mb-1">
+            {format(parseISO(appt.start_time), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          </p>
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <p className="text-sm font-semibold text-gray-800 flex justify-between">
+              <span>{appt.service_name || 'Consulta Geral'}</span>
+              <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded ${appt.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'}`}>{appt.status}</span>
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Especialista: {appt.professional_name}</p>
+            
+            {appt.clinical_notes && (
+              <div className="mt-3 bg-white p-2.5 rounded-lg border border-gray-100 text-xs text-gray-700 whitespace-pre-wrap">
+                {appt.clinical_notes}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }

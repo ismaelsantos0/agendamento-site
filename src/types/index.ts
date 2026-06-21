@@ -25,6 +25,7 @@ export interface Appointment {
   status: AppointmentStatus
   notes?: string
   service_name?: string
+  clinical_notes?: string
 }
 
 export interface CreateAppointmentPayload {

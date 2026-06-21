@@ -54,6 +54,19 @@ export function useAppointments(professionalId?: string, startDate?: string, end
   })
 }
 
+export function usePatientHistory(phone?: string, name?: string) {
+  return useQuery({
+    queryKey: ['patientHistory', phone, name],
+    queryFn: async () => {
+      const { data } = await api.get<Appointment[]>('/appointments/history', {
+        params: { phone, name }
+      })
+      return data
+    },
+    enabled: !!phone && !!name,
+  })
+}
+
 export function useSettings() {
   return useQuery({
     queryKey: queryKeys.settings,
@@ -132,6 +145,32 @@ export function useCreateAppointment() {
   return useMutation({
     mutationFn: async (payload: CreateAppointmentPayload) => {
       const { data } = await api.post<Appointment>('/appointments', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.appointments() })
+    },
+  })
+}
+
+export function useRescheduleAppointment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, start_time }: { id: string; start_time: string }) => {
+      const { data } = await api.put<Appointment>(`/appointments/${id}/reschedule`, { start_time })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.appointments() })
+    },
+  })
+}
+
+export function useCompleteAppointment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, clinical_notes }: { id: string; clinical_notes: string }) => {
+      const { data } = await api.put<Appointment>(`/appointments/${id}/complete`, { clinical_notes })
       return data
     },
     onSuccess: () => {
