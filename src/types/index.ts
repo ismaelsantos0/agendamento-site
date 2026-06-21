@@ -60,6 +60,7 @@ export interface ServiceItem {
   name: string;
   duration_minutes: number;
   price?: string;
+  professional_ids?: string[];
 }
 
 export interface ClinicSettings {

@@ -639,6 +639,37 @@ export default function AdminDashboard() {
                             }}
                           />
                         </div>
+                        <div className="md:col-span-12 mt-2 pt-3 border-t border-gray-200/60">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-2 block">Profissionais Habilitados (Deixe vazio para Todos)</label>
+                          <div className="flex flex-wrap gap-2">
+                            {professionals.map(p => {
+                              const isSelected = svc.professional_ids?.includes(p.id);
+                              return (
+                                <label key={p.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-colors ${isSelected ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                                  <input 
+                                    type="checkbox" 
+                                    className="hidden"
+                                    checked={isSelected || false}
+                                    onChange={(e) => {
+                                      const newServices = [...servicesList];
+                                      const currentIds = newServices[index].professional_ids || [];
+                                      if (e.target.checked) {
+                                        newServices[index].professional_ids = [...currentIds, p.id];
+                                      } else {
+                                        newServices[index].professional_ids = currentIds.filter(id => id !== p.id);
+                                      }
+                                      setServicesList(newServices);
+                                    }}
+                                  />
+                                  <div className={`w-3 h-3 rounded flex items-center justify-center border ${isSelected ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
+                                    {isSelected && <CheckCircle className="w-2.5 h-2.5 text-white" />}
+                                  </div>
+                                  {p.name}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
                         <button 
                           type="button"
                           onClick={() => {

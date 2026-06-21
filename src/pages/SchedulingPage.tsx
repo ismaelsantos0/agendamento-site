@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
 import { useProfessionals, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp } from '../hooks/useAppointments';
+import { ServiceItem } from '../types';
 
 export default function SchedulingPage() {
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
@@ -22,12 +23,18 @@ export default function SchedulingPage() {
 
   const [formData, setFormData] = useState({ name: '', phone: '' });
 
-  // Autoselect first professional if none selected
+  // Autoselect professional or reset if current selection is invalid
   useEffect(() => {
-    if (professionals.length > 0 && !selectedProfId) {
-      setSelectedProfId(professionals[0].id);
+    if (filteredProfessionals.length > 0) {
+      const isValid = filteredProfessionals.some(p => p.id === selectedProfId);
+      if (!isValid) {
+        setSelectedProfId(filteredProfessionals[0].id);
+        setSelectedTime(''); // Reset time if prof changes
+      }
+    } else {
+      setSelectedProfId('');
     }
-  }, [professionals, selectedProfId]);
+  }, [filteredProfessionals, selectedProfId]);
 
   // Phone masking
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,11 +60,22 @@ export default function SchedulingPage() {
   const availableServices = useMemo(() => {
     if (!settings?.services) return [];
     try {
-      return JSON.parse(settings.services) as { id: string, name: string, duration_minutes: number, price?: string }[];
+      return JSON.parse(settings.services) as ServiceItem[];
     } catch {
       return [];
     }
   }, [settings?.services]);
+
+  const filteredProfessionals = useMemo(() => {
+    if (!selectedService || availableServices.length === 0) return professionals;
+    
+    const svc = availableServices.find(s => s.name === selectedService);
+    if (!svc || !svc.professional_ids || svc.professional_ids.length === 0) {
+      return professionals; // All professionals allowed
+    }
+    
+    return professionals.filter(p => svc.professional_ids!.includes(p.id));
+  }, [professionals, selectedService, availableServices]);
 
   const weekDays = useMemo(() => {
     const today = new Date();
@@ -264,7 +282,7 @@ export default function SchedulingPage() {
                 onChange={e => { setSelectedProfId(e.target.value); setSelectedTime(''); }}
                 className="bg-transparent border-none text-sm font-semibold text-teal-900 focus:ring-0 p-0 cursor-pointer outline-none w-full"
               >
-                {professionals.map(p => (
+                {filteredProfessionals.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
