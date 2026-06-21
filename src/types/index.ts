@@ -35,6 +35,24 @@ export interface CreateAppointmentPayload {
   otp_code: string
 }
 
+export interface AddressInfo {
+  cep: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  mapsLink: string;
+}
+
+export interface DailySchedule {
+  isOpen: boolean;
+  start: string;
+  end: string;
+}
+
+export type WeeklySchedule = Record<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday', DailySchedule>;
+
 export interface ClinicSettings {
   id: string;
   clinic_name: string | null;
