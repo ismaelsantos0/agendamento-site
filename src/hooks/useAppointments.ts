@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
-import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, ClinicSettings, Blockout, CreateBlockoutPayload } from '../types'
+import { Professional, AvailabilityRule, Appointment, CreateAppointmentPayload, ClinicSettings, Blockout, CreateBlockoutPayload, ServiceItem } from '../types'
 
 export const queryKeys = {
   professionals: ['professionals'] as const,
