@@ -137,7 +137,8 @@ export function useUpdateSettings() {
       msg_created?: string, 
       msg_confirmation?: string,
       msg_feedback_confirmed?: string,
-      msg_feedback_cancelled?: string
+      msg_feedback_cancelled?: string,
+      services?: string
     }) => {
       const { data } = await api.put<ClinicSettings>('/settings', payload)
       return data
