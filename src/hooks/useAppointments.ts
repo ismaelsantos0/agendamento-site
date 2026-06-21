@@ -349,9 +349,16 @@ export function useWhatsAppStatus() {
 export function useWhatsAppQR() {
   return useMutation({
     mutationFn: async () => {
-      const { data } = await api.get<{base64?: string, error?: string}>('/whatsapp/qr')
-      if (data.error) throw new Error(data.error)
-      return data.base64
+      try {
+        const { data } = await api.get<{base64?: string, error?: string}>('/whatsapp/qr')
+        if (data.error) throw new Error(data.error)
+        return data.base64
+      } catch (err: any) {
+        if (err.response?.data?.detail) {
+          throw new Error(err.response.data.detail)
+        }
+        throw err
+      }
     }
   })
 }
