@@ -111,7 +111,8 @@ export default function AdminDashboard() {
 
   const [completeModalAppt, setCompleteModalAppt] = useState<Appointment | null>(null)
   const [clinicalNotes, setClinicalNotes] = useState('')
-  const [returnDays, setReturnDays] = useState('')
+  const [wantsReturn, setWantsReturn] = useState(false)
+  const [returnModalAppt, setReturnModalAppt] = useState<Appointment | null>(null)
 
   const [historyModalPatient, setHistoryModalPatient] = useState<{name: string, phone: string} | null>(null)
 
@@ -1523,20 +1524,17 @@ export default function AdminDashboard() {
               className="w-full h-32 p-3 border border-gray-200 rounded-xl mb-4 focus:ring-2 focus:ring-emerald-500 outline-none resize-none text-sm"
             />
 
-            <div className="mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-              <label className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-2">
-                <CalendarCheck className="w-4 h-4" /> Marcar Retorno
+            <div className="mb-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+              <label className="text-sm font-bold text-emerald-800 flex items-center gap-2 cursor-pointer">
+                <CalendarCheck className="w-5 h-5" /> 
+                Agendar Retorno do Paciente
               </label>
-              <select
-                value={returnDays}
-                onChange={e => setReturnDays(e.target.value)}
-                className="w-full p-2 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-              >
-                <option value="">Não agendar agora</option>
-                <option value="15">Em 15 dias</option>
-                <option value="30">Em 30 dias</option>
-                <option value="60">Em 60 dias</option>
-              </select>
+              <input 
+                type="checkbox" 
+                checked={wantsReturn} 
+                onChange={e => setWantsReturn(e.target.checked)}
+                className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
             </div>
 
             <div className="flex gap-2">
@@ -1554,25 +1552,15 @@ export default function AdminDashboard() {
                       clinical_notes: clinicalNotes
                     });
 
-                    if (returnDays) {
-                      const days = parseInt(returnDays);
-                      const returnDate = addDays(parseISO(completeModalAppt.start_time), days);
-                      
-                      await createAppointment.mutateAsync({
-                        professional_id: completeModalAppt.professional_id,
-                        customer_name: completeModalAppt.customer_name,
-                        customer_phone: completeModalAppt.customer_phone,
-                        start_time: returnDate.toISOString(),
-                        service_name: completeModalAppt.service_name || undefined,
-                        otp_code: "bypass_admin_123"
-                      });
-                      toast.success(`Retorno agendado para daqui a ${days} dias!`);
-                    }
-
                     toast.success("Consulta concluída!");
+                    const savedAppt = completeModalAppt;
                     setCompleteModalAppt(null);
                     setClinicalNotes('');
-                    setReturnDays('');
+                    
+                    if (wantsReturn) {
+                      setReturnModalAppt(savedAppt);
+                      setWantsReturn(false);
+                    }
                   } catch (err: any) {
                     toast.error(err.response?.data?.detail || "Erro ao concluir");
                   }
@@ -1583,6 +1571,50 @@ export default function AdminDashboard() {
                 {(completeAppointment.isPending || createAppointment.isPending) ? 'Salvando...' : 'Salvar Conclusão'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Return Appointment Modal */}
+      {returnModalAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Marcar Retorno</h3>
+                <p className="text-sm text-gray-600 mt-1">Escolha a data para {returnModalAppt.customer_name}</p>
+              </div>
+              <button 
+                onClick={() => setReturnModalAppt(null)}
+                className="p-2 bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <RescheduleModalInner 
+              appt={returnModalAppt} 
+              onClose={() => setReturnModalAppt(null)} 
+              onConfirm={async (date, time) => {
+                const [h, m] = time.split(':').map(Number);
+                const newStart = setMinutes(setHours(date, h), m);
+                
+                try {
+                  await createAppointment.mutateAsync({
+                    professional_id: returnModalAppt.professional_id,
+                    customer_name: returnModalAppt.customer_name,
+                    customer_phone: returnModalAppt.customer_phone,
+                    start_time: newStart.toISOString(),
+                    service_name: returnModalAppt.service_name || undefined,
+                    otp_code: "bypass_admin_123"
+                  });
+                  toast.success("Retorno agendado com sucesso!");
+                  setReturnModalAppt(null);
+                } catch (err: any) {
+                  toast.error(err.response?.data?.detail || "Erro ao agendar retorno");
+                }
+              }} 
+            />
           </div>
         </div>
       )}
