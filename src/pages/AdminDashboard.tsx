@@ -22,6 +22,7 @@ import {
   useUpdateAppointmentStatus,
   useWhatsAppStatus,
   useWhatsAppQR,
+  useWhatsappLogout,
   useTestWhatsApp,
   useTestConfirmationMessage,
   useAppointmentById,
@@ -95,6 +96,8 @@ export default function AdminDashboard() {
 
   const { data: settings } = useSettings()
   const updateSettings = useUpdateSettings()
+  
+  const logoutWhatsapp = useWhatsappLogout()
   const { data: dbServices = [] } = useServices()
   const syncServices = useSyncServices()
   
@@ -785,7 +788,28 @@ export default function AdminDashboard() {
                 <div className={`w-3 h-3 rounded-full ${wpStatus?.status === 'open' ? 'bg-green-500' : 'bg-red-500 animate-pulse shadow-red-500 shadow-sm'}`} />
                 <h3 className="font-bold text-gray-800">Status da Conexão: <span className={`uppercase ${wpStatus?.status === 'open' ? 'text-green-600' : 'text-red-500'}`}>{wpStatus?.status || 'Carregando...'}</span></h3>
               </div>
-              <button onClick={() => refetchWpStatus()} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" title="Atualizar Status"><RefreshCw className="w-4 h-4 text-gray-600" /></button>
+              <div className="flex items-center gap-2">
+                {wpStatus?.status === 'open' && (
+                  <button 
+                    onClick={async () => {
+                      if(window.confirm('Tem certeza que deseja desconectar o aparelho atual? Você precisará ler o QR Code novamente.')){
+                        try {
+                          await logoutWhatsapp.mutateAsync()
+                          toast.success('Aparelho desconectado!')
+                          refetchWpStatus()
+                        } catch (err: any) {
+                          toast.error('Erro ao desconectar: ' + err.message)
+                        }
+                      }
+                    }}
+                    disabled={logoutWhatsapp.isPending}
+                    className="flex items-center gap-1 p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-xs font-bold"
+                  >
+                    <LogOut className="w-4 h-4" /> Desconectar
+                  </button>
+                )}
+                <button onClick={() => refetchWpStatus()} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" title="Atualizar Status"><RefreshCw className="w-4 h-4 text-gray-600" /></button>
+              </div>
             </div>
             
             {/* QR Code */}

@@ -87,6 +87,8 @@ export function useSettings() {
   })
 }
 
+
+
 export function useServices() {
   return useQuery({
     queryKey: queryKeys.services,
@@ -98,6 +100,32 @@ export function useServices() {
 }
 
 // ─── Mutations ───────────────────────────────────────────────────────────
+
+export function useUpdateSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: Partial<ClinicSettings>) => {
+      const { data } = await api.put<ClinicSettings>('/settings', payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings })
+    },
+  })
+}
+
+export function useWhatsappLogout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post<{success: boolean}>('/whatsapp/logout')
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.status })
+    },
+  })
+}
 
 export function useCreateService() {
   const queryClient = useQueryClient()
