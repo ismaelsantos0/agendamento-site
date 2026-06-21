@@ -66,6 +66,9 @@ export default function SchedulingPage() {
     let currentSlot = setMinutes(setHours(selectedDate, startH), startM);
     const endTime = setMinutes(setHours(selectedDate, endH), endM);
     const duration = settings?.appointment_duration_minutes || 60;
+    
+    // Minimum notice buffer: appointments must be at least 'duration' minutes in the future
+    const nowWithBuffer = addMinutes(new Date(), duration);
 
     while (addMinutes(currentSlot, duration) <= endTime) {
       const slotStart = currentSlot;
@@ -84,7 +87,9 @@ export default function SchedulingPage() {
         return slotStart < bEnd && slotEnd > bStart;
       });
 
-      if (!hasConflict && !hasBlockout) slots.push(format(currentSlot, 'HH:mm'));
+      if (!hasConflict && !hasBlockout && slotStart >= nowWithBuffer) {
+        slots.push(format(currentSlot, 'HH:mm'));
+      }
       currentSlot = addMinutes(currentSlot, duration);
     }
     return slots;
