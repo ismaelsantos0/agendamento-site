@@ -99,7 +99,8 @@ export default function SchedulingPage() {
     try {
       await sendOtp.mutateAsync({
         customer_phone: formData.phone.replace(/\D/g, ''),
-        customer_name: formData.name
+        customer_name: formData.name,
+        professional_id: selectedProfId
       });
       setOtpSent(true);
       toast.success('Código enviado para o seu WhatsApp!');

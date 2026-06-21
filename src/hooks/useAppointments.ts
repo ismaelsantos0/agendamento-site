@@ -80,7 +80,7 @@ export function useCreateAppointment() {
 
 export function useSendOtp() {
   return useMutation({
-    mutationFn: async (payload: { customer_phone: string; customer_name: string }) => {
+    mutationFn: async (payload: { customer_phone: string; customer_name: string; professional_id: string }) => {
       const { data } = await api.post('/appointments/send-code', payload)
       return data
     },
