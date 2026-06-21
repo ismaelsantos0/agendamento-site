@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Calendar, Clock, AlertCircle, User, Phone, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, User, Phone, CheckCircle2, ChevronDown, ClipboardList, UserPlus } from 'lucide-react';
 import { format, addMinutes, setHours, setMinutes, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -249,39 +249,66 @@ export default function SchedulingPage() {
       <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
         {/* Card Principal */}
         <div className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8">
-          {/* Services Section */}
-          {availableServices.length > 0 && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-slate-200 flex flex-col gap-2">
-              <label className="text-xs font-bold text-blue-800 uppercase">Qual serviço deseja?</label>
-              <select 
-                value={selectedService} 
-                onChange={e => { setSelectedService(e.target.value); setSelectedTime(''); }}
-                className="bg-transparent border-none text-sm font-semibold text-blue-900 focus:ring-0 p-0 cursor-pointer outline-none w-full"
-              >
-                <option value="">Selecione um serviço...</option>
-                {availableServices.map(s => (
-                  <option key={s.id} value={s.name}>{s.name} {s.price ? `- ${s.price}` : ''}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="p-6 border-b border-slate-100 bg-white">
+            <h2 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-teal-600" />
+              Opções de Atendimento
+            </h2>
+            
+            <div className="space-y-4">
+              {/* Services Section */}
+              {availableServices.length > 0 && (
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1 mb-1.5 block">Serviço Desejado</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <ClipboardList className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                    </div>
+                    <select 
+                      value={selectedService} 
+                      onChange={e => { setSelectedService(e.target.value); setSelectedTime(''); }}
+                      className="block w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white hover:bg-slate-100 transition-all cursor-pointer"
+                    >
+                      <option value="">Selecione um serviço...</option>
+                      {availableServices.map(s => (
+                        <option key={s.id} value={s.name}>{s.name} {s.price ? `- ${s.price}` : ''}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                      <ChevronDown className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {/* Specialist Name Section */}
-          <div className="bg-gradient-to-r from-teal-50 to-emerald-50 px-6 py-4 border-b border-slate-200 flex flex-col gap-2">
-            <label className="text-xs font-bold text-teal-800 uppercase">Especialista</label>
-            {loadingProfs ? (
-              <div className="h-8 bg-teal-100/50 rounded animate-pulse w-1/2" />
-            ) : (
-              <select 
-                value={selectedProfId} 
-                onChange={e => { setSelectedProfId(e.target.value); setSelectedTime(''); }}
-                className="bg-transparent border-none text-sm font-semibold text-teal-900 focus:ring-0 p-0 cursor-pointer outline-none w-full"
-              >
-                {filteredProfessionals.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            )}
+              {/* Specialist Name Section */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1 mb-1.5 block">Especialista</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <UserPlus className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                  </div>
+                  {loadingProfs ? (
+                    <div className="h-[52px] bg-slate-100 rounded-xl animate-pulse w-full border border-slate-200" />
+                  ) : (
+                    <select 
+                      value={selectedProfId} 
+                      onChange={e => { setSelectedProfId(e.target.value); setSelectedTime(''); }}
+                      className="block w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white hover:bg-slate-100 transition-all cursor-pointer"
+                    >
+                      {filteredProfessionals.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
+                  {!loadingProfs && (
+                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                      <ChevronDown className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Calendar Section */}
