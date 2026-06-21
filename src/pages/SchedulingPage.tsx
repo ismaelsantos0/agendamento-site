@@ -10,7 +10,7 @@ import { useProfessionals, useProfessionalBySlug, useAvailability, useAppointmen
 export default function SchedulingPage() {
   const { slug } = useParams<{ slug?: string }>();
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
-  const { data: profBySlug, isLoading: loadingSlug } = useProfessionalBySlug(slug);
+  const { data: profBySlug } = useProfessionalBySlug(slug);
   const { data: settings } = useSettings();
   const { data: dbServices = [] } = useServices();
   const createAppointment = useCreateAppointment();

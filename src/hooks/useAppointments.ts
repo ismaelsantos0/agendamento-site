@@ -302,7 +302,8 @@ export function useUpdateSettings() {
       msg_confirmation?: string,
       msg_feedback_confirmed?: string,
       msg_feedback_cancelled?: string,
-      services?: string
+      services?: string,
+      allow_custom_links?: boolean
     }) => {
       const { data } = await api.put<ClinicSettings>('/settings', payload)
       return data

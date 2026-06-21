@@ -291,6 +291,7 @@ export default function AdminDashboard() {
         notify_cancelled: true,
         notify_rescheduled: true,
         notify_upcoming: true,
+        has_custom_link: false,
         is_active: true
       })
       toast.success('Profissional cadastrado!')
