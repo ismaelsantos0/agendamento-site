@@ -308,6 +308,10 @@ export default function SchedulingPage() {
                     </div>
                     {loadingProfs ? (
                       <div className="h-[52px] bg-slate-100 rounded-xl animate-pulse w-full border border-slate-200" />
+                    ) : filteredProfessionals.length === 1 ? (
+                      <div className="flex items-center w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl">
+                        {filteredProfessionals[0].name}
+                      </div>
                     ) : (
                       <select 
                         value={selectedProfId} 
@@ -319,9 +323,11 @@ export default function SchedulingPage() {
                         ))}
                       </select>
                     )}
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
-                    </div>
+                    {(!loadingProfs && filteredProfessionals.length !== 1) && (
+                      <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                        <ChevronDown className="h-4 w-4 text-slate-400" />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
