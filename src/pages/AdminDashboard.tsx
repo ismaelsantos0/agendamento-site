@@ -932,6 +932,7 @@ export default function AdminDashboard() {
               <form onSubmit={handleSaveSettings} className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">
                 <h3 className="font-bold text-gray-800 text-sm">Dados da Clínica</h3>
                 
+                <fieldset disabled={role !== 'master'} className="space-y-6">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Nome da Clínica / Empresa</label>
                   <input className="input-field" value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Ex: Clínica Saúde Ideal" />
@@ -1006,11 +1007,15 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="pt-2">
-                  <button disabled={updateSettings.isPending} type="submit" className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
-                    {updateSettings.isPending ? 'Salvando...' : 'Salvar Dados da Clínica'}
-                  </button>
-                </div>
+                </fieldset>
+
+                {role === 'master' && (
+                  <div className="pt-2">
+                    <button disabled={updateSettings.isPending} type="submit" className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
+                      {updateSettings.isPending ? 'Salvando...' : 'Salvar Dados da Clínica'}
+                    </button>
+                  </div>
+                )}
               </form>
             )}
             
