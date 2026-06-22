@@ -248,17 +248,24 @@ export default function SchedulingPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+      {/* Header Premium */}
+      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm">
+        <div className="max-w-2xl mx-auto px-5 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
-                <User className="w-5 h-5 text-teal-600" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30 shrink-0">
+                <span className="text-lg font-bold text-white">
+                  {profBySlug ? profBySlug.name.substring(0,2).toUpperCase() : (settings?.clinic_name ? settings.clinic_name.substring(0,2).toUpperCase() : 'AG')}
+                </span>
               </div>
-              <h1 className="text-lg font-semibold text-slate-900">
-                {profBySlug ? profBySlug.name : (settings?.clinic_name || 'Agendamento')}
-              </h1>
+              <div>
+                <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                  {profBySlug ? profBySlug.name : (settings?.clinic_name || 'Agendamento')}
+                </h1>
+                <p className="text-[11px] font-bold text-teal-600 uppercase tracking-wider">
+                  {profBySlug ? (profBySlug.profession || 'Especialista') : 'Agendamento Online'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -301,35 +308,44 @@ export default function SchedulingPage() {
 
               {/* Specialist Name Section */}
               {!slug && (
-                <div>
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1 mb-1.5 block">Especialista</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <UserPlus className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-                    </div>
-                    {loadingProfs ? (
-                      <div className="h-[52px] bg-slate-100 rounded-xl animate-pulse w-full border border-slate-200" />
-                    ) : filteredProfessionals.length === 1 ? (
-                      <div className="flex items-center w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl">
-                        {filteredProfessionals[0].name}
+                <div className="animate-fade-in">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1 mb-2 block">Especialista</label>
+                  
+                  {loadingProfs ? (
+                    <div className="h-[72px] bg-slate-100 rounded-2xl animate-pulse w-full border border-slate-200" />
+                  ) : filteredProfessionals.length === 1 ? (
+                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100/80 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                      <div className="absolute right-0 top-0 w-32 h-32 bg-teal-500/10 rounded-full -mr-8 -mt-8 blur-2xl group-hover:bg-teal-500/20 transition-all pointer-events-none"></div>
+                      <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-teal-600 font-bold text-lg border border-teal-100 shadow-sm shrink-0 z-10">
+                        {filteredProfessionals[0].name.substring(0, 2).toUpperCase()}
                       </div>
-                    ) : (
+                      <div className="z-10">
+                        <h3 className="font-extrabold text-slate-800 text-sm">{filteredProfessionals[0].name}</h3>
+                        <p className="text-[10px] font-bold text-teal-600/80 mt-0.5 uppercase tracking-wider flex items-center gap-1">
+                           <CheckCircle2 className="w-3 h-3" /> Selecionado
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <UserPlus className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+                      </div>
                       <select 
                         value={selectedProfId} 
                         onChange={e => { setSelectedProfId(e.target.value); setSelectedTime(''); }}
                         className="block w-full pl-10 pr-10 py-3.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 focus:bg-white hover:bg-slate-100 transition-all cursor-pointer"
                       >
+                        <option value="" disabled>Escolha o especialista</option>
                         {filteredProfessionals.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
-                    )}
-                    {(!loadingProfs && filteredProfessionals.length !== 1) && (
                       <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                        <ChevronDown className="h-4 w-4 text-slate-400" />
+                        <ChevronDown className="h-4 w-4 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
