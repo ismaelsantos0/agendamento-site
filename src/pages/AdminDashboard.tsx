@@ -496,11 +496,11 @@ export default function AdminDashboard() {
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
         msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined,
         allow_custom_links: allowCustomLinks
-      })
       toast.success('Configurações gerais salvas!')
       setShowSettingsForm(false)
-    } catch {
-      toast.error('Erro ao salvar configurações gerais.')
+    } catch (err: any) {
+      console.error(err)
+      toast.error(`Erro ao salvar: ${err?.response?.data?.detail || err.message}`)
     }
   }
 
