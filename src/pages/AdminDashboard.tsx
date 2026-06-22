@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     endDate, 
     filterStatus || undefined
   )
-  const { data: professionals = [] } = useProfessionals()
+  const { data: professionals = [], isLoading: isLoadingProfessionals } = useProfessionals()
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
   // Usa o role do servidor se disponivel, caso contrario usa o do token JWT
   const role = currentUser?.role || roleInicial
@@ -147,6 +147,8 @@ export default function AdminDashboard() {
   const [showAppointmentsTab, setShowAppointmentsTab] = useState(true)
   const [showPatientsTab, setShowPatientsTab] = useState(false)
   const [showUsersTab, setShowUsersTab] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [isSoloMode, setIsSoloMode] = useState(false)
   const [durationMinutes, setDurationMinutes] = useState('60')
 
   const [cancelModalApptId, setCancelModalApptId] = useState<string | null>(null)
@@ -233,6 +235,22 @@ export default function AdminDashboard() {
       setServicesList(dbServices)
     }
   }, [dbServices])
+
+  useEffect(() => {
+    // Exibe o Onboarding Wizard para clientes (clínica) que acessam pela primeira vez (sem profissionais)
+    if (currentUser && currentUser.role === 'clinica' && professionals.length === 0 && !isLoadingUser && !isLoadingProfessionals) {
+      const hasDismissed = localStorage.getItem(`@agendamentos:onboarding_${currentUser.id}`)
+      if (!hasDismissed) {
+        setShowOnboarding(true)
+      }
+    }
+  }, [currentUser, professionals, isLoadingUser, isLoadingProfessionals])
+
+  useEffect(() => {
+    if (currentUser) {
+      setIsSoloMode(localStorage.getItem(`@agendamentos:is_solo_${currentUser.id}`) === 'true')
+    }
+  }, [currentUser, showOnboarding]) // showOnboarding dependency to update after wizard
 
   useEffect(() => {
     // Usa profIdInicial (do JWT) caso currentUser ainda nao chegou
@@ -526,7 +544,7 @@ export default function AdminDashboard() {
           {role !== 'profissional' && (
             <button onClick={() => { setShowProfForm(!showProfForm); setShowAppointmentsTab(false); setShowRuleForm(false); setShowSettingsForm(false); setShowPatientsTab(false); setShowUsersTab(false); }} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border font-medium text-sm transition-all ${showProfForm ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-gray-100 text-gray-700 hover:bg-gray-50'}`}>
               <UserPlus className={`w-6 h-6 mb-2 ${showProfForm ? 'text-primary' : 'text-gray-500'}`} />
-              Profissionais
+              {isSoloMode ? 'Meu Perfil' : 'Profissionais'}
             </button>
           )}
 
@@ -556,7 +574,7 @@ export default function AdminDashboard() {
         {/* Form: Especialista */}
         {showProfForm && (
           <div className="animate-fade-in space-y-6">
-            {!editingProfId ? (
+            {!editingProfId && !isSoloMode ? (
               <form onSubmit={handleAddProfessional} className="card space-y-3">
                 <h3 className="font-bold text-gray-800 text-sm">Cadastrar Profissional</h3>
                 <input 
@@ -581,7 +599,7 @@ export default function AdminDashboard() {
                   {createProf.isPending ? 'Salvando...' : 'Salvar Especialista'}
                 </button>
               </form>
-            ) : (
+            ) : editingProfId ? (
               <form onSubmit={handleEditProfessional} className="card space-y-4 relative">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-gray-800 text-sm">Editar Profissional</h3>
@@ -643,9 +661,9 @@ export default function AdminDashboard() {
                   {updateProf.isPending ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               </form>
-            )}
+            ) : null}
 
-            {!editingProfId && (
+            {!editingProfId && !isSoloMode && (
               <div className="card space-y-3">
                 <h3 className="font-bold text-gray-800 text-sm mb-3">Profissionais Cadastrados</h3>
                 {professionals.length === 0 ? (
@@ -696,6 +714,30 @@ export default function AdminDashboard() {
                     ))}
                   </ul>
                 )}
+              </div>
+            )}
+            
+            {isSoloMode && professionals.length > 0 && !editingProfId && (
+              <div className="flex justify-center mt-8">
+                <button 
+                  onClick={() => {
+                    const myProf = professionals.find(p => p.name === currentUser?.username) || professionals[0];
+                    if (myProf) {
+                        setEditingProfId(myProf.id)
+                        setEditProfName(myProf.name)
+                        setEditProfProfession(myProf.profession || '')
+                        setEditProfContact(myProf.contact_number || '')
+                        setEditProfNotifyNew(myProf.notify_new ?? true)
+                        setEditProfNotifyCancelled(myProf.notify_cancelled ?? true)
+                        setEditProfNotifyRescheduled(myProf.notify_rescheduled ?? true)
+                        setEditProfNotifyUpcoming(myProf.notify_upcoming ?? true)
+                        setEditProfHasCustomLink(myProf.has_custom_link ?? false)
+                    }
+                  }}
+                  className="btn-primary w-full py-3"
+                >
+                  Editar Meu Perfil
+                </button>
               </div>
             )}
           </div>
@@ -1656,6 +1698,83 @@ export default function AdminDashboard() {
         )}
 
       </main>
+
+      {/* Onboarding Wizard Modal */}
+      {showOnboarding && currentUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 p-4 animate-fade-in backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-teal-400"></div>
+            
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
+                <UserPlus className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Bem-vindo ao seu painel! </h2>
+              <p className="text-gray-500 text-sm">
+                Percebemos que este é o seu primeiro acesso. Para configurarmos o sistema do jeito certo, como você trabalha?
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <button 
+                onClick={async () => {
+                  try {
+                    // 1. Cria o profissional com o nome de usuário dele
+                    await createProf.mutateAsync({
+                      name: currentUser.username,
+                      profession: 'Especialista',
+                      contact_number: '',
+                      notify_new: true,
+                      notify_cancelled: true,
+                      notify_rescheduled: true,
+                      notify_upcoming: true,
+                      is_active: true,
+                      has_custom_link: true // Auto-habilita link exclusivo
+                    })
+                    // 2. Salva que já passou pelo onboarding
+                    localStorage.setItem(`@agendamentos:onboarding_${currentUser.id}`, 'true')
+                    // 3. Opcional: Flag de solo (se a lógica de front puder usar)
+                    localStorage.setItem(`@agendamentos:is_solo_${currentUser.id}`, 'true')
+                    
+                    setShowOnboarding(false)
+                    toast.success('Perfil Solo criado com sucesso! Tudo pronto.')
+                  } catch {
+                    toast.error('Erro ao configurar perfil. Tente novamente.')
+                  }
+                }}
+                className="w-full flex items-center justify-between p-4 rounded-xl border-2 border-teal-100 hover:border-teal-500 hover:bg-teal-50 transition-all group text-left"
+              >
+                <div>
+                  <h3 className="font-bold text-teal-900 group-hover:text-teal-700">Sou Profissional Solo</h3>
+                  <p className="text-xs text-teal-600/80 mt-1">Trabalho sozinho. Crie meu perfil automático e meu link de agendamento.</p>
+                </div>
+                <CheckCircle className="w-6 h-6 text-teal-400 group-hover:text-teal-600" />
+              </button>
+
+              <button 
+                onClick={() => {
+                  localStorage.setItem(`@agendamentos:onboarding_${currentUser.id}`, 'true')
+                  localStorage.setItem(`@agendamentos:is_solo_${currentUser.id}`, 'false')
+                  setShowOnboarding(false)
+                  setShowProfForm(true)
+                  setShowAppointmentsTab(false)
+                }}
+                className="w-full flex items-center justify-between p-4 rounded-xl border-2 border-indigo-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group text-left"
+              >
+                <div>
+                  <h3 className="font-bold text-indigo-900 group-hover:text-indigo-700">Sou uma Clínica / Equipe</h3>
+                  <p className="text-xs text-indigo-600/80 mt-1">Vou gerenciar vários profissionais. Quero configurar manualmente.</p>
+                </div>
+                <UserPlus className="w-6 h-6 text-indigo-400 group-hover:text-indigo-600" />
+              </button>
+            </div>
+            
+            <p className="text-[10px] text-center text-gray-400 mt-6 pt-4 border-t border-gray-100">
+              Você sempre poderá alterar configurações avançadas depois na aba de Perfil.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Cancelamento */}
       {cancelModalApptId && (
