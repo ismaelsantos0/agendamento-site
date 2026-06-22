@@ -510,56 +510,25 @@ export default function AdminDashboard() {
     window.location.href = window.location.pathname
   }
 
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.substring(0, 2).toUpperCase();
-  }
-
-  const roleName = role === 'master' ? 'Painel Master' : role === 'clinica' ? (isSoloMode ? 'Consultório' : 'Clínica') : 'Especialista';
+  const diasSemana = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-teal-600 text-white pt-10 pb-10 px-6 rounded-b-[2.5rem] shadow-lg">
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-teal-300 opacity-10 blur-2xl pointer-events-none"></div>
-        
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center shadow-inner">
-              <span className="text-xl font-bold tracking-wider text-white">
-                {getInitials(currentUser?.username || 'G')}
-              </span>
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-extrabold tracking-tight">
-                Olá, <span className="text-teal-100">{currentUser?.username || 'Usuário'}</span>
-              </h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] uppercase tracking-wider text-white/90 font-bold bg-black/15 px-2 py-0.5 rounded-md backdrop-blur-sm">
-                  {roleName}
-                </span>
-                <span className="text-sm text-white/40">•</span>
-                <span className="text-xs font-medium text-white/80 capitalize">
-                  {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
-                </span>
-              </div>
-            </div>
+      <header className="bg-primary text-white pt-12 pb-6 px-6 rounded-b-[2rem] flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-white" />
           </div>
-          
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <div className="hidden sm:flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              <span className="text-[10px] uppercase font-bold text-white tracking-wide">Sistema Online</span>
-            </div>
-            <button onClick={handleLogout} className="p-3 bg-white/10 rounded-xl hover:bg-white/20 hover:scale-105 active:scale-95 transition-all shadow-sm border border-white/10 flex items-center gap-2 group" title="Sair do Sistema">
-              <LogOut className="w-5 h-5 text-white group-hover:-translate-x-0.5 transition-transform" />
-              <span className="text-xs font-bold hidden sm:block">Sair</span>
-            </button>
+          <div>
+            <h1 className="text-lg font-bold">Gestão</h1>
+            {role && (
+              <p className="text-xs text-white/70 capitalize">{role === 'master' ? 'Master' : role === 'clinica' ? 'Clinica' : 'Profissional'}</p>
+            )}
           </div>
         </div>
+        <button onClick={handleLogout} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+          <LogOut className="w-5 h-5 text-white" />
+        </button>
       </header>
 
       <main className="px-5 py-6 space-y-6">
