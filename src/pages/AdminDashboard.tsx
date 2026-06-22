@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     endDate, 
     filterStatus || undefined
   )
-  const { data: professionals = [], isLoading: isLoadingProfessionals } = useProfessionals()
+  const { data: professionals = [] } = useProfessionals()
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
   // Usa o role do servidor se disponivel, caso contrario usa o do token JWT
   const role = currentUser?.role || roleInicial
