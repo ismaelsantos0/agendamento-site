@@ -522,6 +522,8 @@ export default function AdminDashboard() {
     window.location.href = window.location.pathname
   }
 
+  const diasSemana = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
+
   const getInitials = (name?: string) => {
     if (!name) return 'U';
     const parts = name.trim().split(' ');
