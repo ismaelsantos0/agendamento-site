@@ -57,8 +57,9 @@ export default function SchedulingPage() {
     if (profBySlug) return [profBySlug];
     
     // Hide custom link professionals from the general clinic hub
+    // EXCETO se for uma clínica Solo (apenas 1 profissional no sistema), para evitar que o hub fique vazio
     let validProfs = professionals;
-    if (!slug) {
+    if (!slug && professionals.length > 1) {
       validProfs = professionals.filter(p => !p.has_custom_link);
     }
     
