@@ -496,6 +496,7 @@ export default function AdminDashboard() {
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
         msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined,
         allow_custom_links: allowCustomLinks
+      })
       toast.success('Configurações gerais salvas!')
       setShowSettingsForm(false)
     } catch (err: any) {
