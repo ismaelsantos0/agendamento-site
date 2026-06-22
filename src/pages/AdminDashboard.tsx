@@ -237,14 +237,22 @@ export default function AdminDashboard() {
   }, [dbServices])
 
   useEffect(() => {
-    // Exibe o Onboarding Wizard para clientes (clínica) que acessam pela primeira vez (sem profissionais)
-    if (currentUser && currentUser.role === 'clinica' && professionals.length === 0 && !isLoadingUser && !isLoadingProfessionals) {
+    // Exibe o Onboarding Wizard para clientes (clínica) que acessam pela primeira vez
+    if (currentUser && currentUser.role === 'clinica') {
       const hasDismissed = localStorage.getItem(`@agendamentos:onboarding_${currentUser.id}`)
       if (!hasDismissed) {
-        setShowOnboarding(true)
+        if (professionals.length === 0) {
+          // Usa um timeout para evitar flashes durante o carregamento inicial
+          const timer = setTimeout(() => setShowOnboarding(true), 800)
+          return () => clearTimeout(timer)
+        } else {
+          // Se já tem profissionais, nunca mais mostra
+          localStorage.setItem(`@agendamentos:onboarding_${currentUser.id}`, 'true')
+          setShowOnboarding(false)
+        }
       }
     }
-  }, [currentUser, professionals, isLoadingUser, isLoadingProfessionals])
+  }, [currentUser, professionals])
 
   useEffect(() => {
     if (currentUser) {
