@@ -255,6 +255,14 @@ export default function AdminDashboard() {
   const [msgFeedbackCancelled, setMsgFeedbackCancelled] = useState('')
   const [clinicName, setClinicName] = useState('')
   const [allowCustomLinks, setAllowCustomLinks] = useState(false)
+  // Lembretes automáticos
+  const [reminderHoursBefore, setReminderHoursBefore] = useState<number | null>(null)
+  const [reminderMessage, setReminderMessage] = useState('')
+  // Customização visual página pública
+  const [primaryColor, setPrimaryColor] = useState('#0f766e')
+  const [bannerImageUrl, setBannerImageUrl] = useState('')
+  const [socialInstagram, setSocialInstagram] = useState('')
+  const [socialWhatsapp, setSocialWhatsapp] = useState('')
   
   const defaultAddress: AddressInfo = { cep: '', street: '', number: '', neighborhood: '', city: '', state: '', mapsLink: '' }
   const [addressInfo, setAddressInfo] = useState<AddressInfo>(defaultAddress)
@@ -287,6 +295,12 @@ export default function AdminDashboard() {
       setMsgFeedbackCancelled(settings.msg_feedback_cancelled || '')
       setClinicName(settings.clinic_name || '')
       setAllowCustomLinks(settings.allow_custom_links ?? false)
+      setReminderHoursBefore((settings as any).reminder_hours_before ?? null)
+      setReminderMessage((settings as any).reminder_message || '')
+      setPrimaryColor((settings as any).primary_color || '#0f766e')
+      setBannerImageUrl((settings as any).banner_image_url || '')
+      setSocialInstagram((settings as any).social_instagram || '')
+      setSocialWhatsapp((settings as any).social_whatsapp || '')
       try {
         if (settings.address) setAddressInfo(JSON.parse(settings.address))
       } catch { /* legacy string */ }
@@ -549,7 +563,13 @@ export default function AdminDashboard() {
         msg_confirmation: msgConfirmation.trim() || undefined,
         msg_feedback_confirmed: msgFeedbackConfirmed.trim() || undefined,
         msg_feedback_cancelled: msgFeedbackCancelled.trim() || undefined,
-        allow_custom_links: allowCustomLinks
+        allow_custom_links: allowCustomLinks,
+        reminder_hours_before: reminderHoursBefore,
+        reminder_message: reminderMessage.trim() || undefined,
+        primary_color: primaryColor || undefined,
+        banner_image_url: bannerImageUrl.trim() || undefined,
+        social_instagram: socialInstagram.trim() || undefined,
+        social_whatsapp: socialWhatsapp.trim() || undefined,
       })
       toast.success('Configurações gerais salvas!')
       setShowSettingsForm(false)
@@ -1387,7 +1407,7 @@ export default function AdminDashboard() {
               </div>
               
               <div>
-                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Mensagem de Confirmação (2 horas antes)</label>
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Mensagem de Confirmação (Confirmação / Cancelamento)</label>
                 <textarea 
                   className="input-field min-h-[100px] resize-y text-sm font-medium text-gray-700" 
                   value={msgConfirmation} 
@@ -1489,6 +1509,47 @@ export default function AdminDashboard() {
                   onChange={e => setMsgFeedbackCancelled(e.target.value)} 
                   placeholder="Seu agendamento foi *CANCELADO*." 
                 />
+              </div>
+
+              {/* Seção de Lembretes Automáticos */}
+              <div className="pt-4 border-t border-gray-100">
+                <h4 className="text-xs font-bold text-gray-700 mb-1 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-teal-500" />
+                  Lembrete Automático de Consulta
+                </h4>
+                <p className="text-[11px] text-gray-400 mb-3">
+                  O sistema enviará uma mensagem automática para o paciente antes da consulta. Use <code>{`{cliente}`}</code>, <code>{`{profissional}`}</code>, <code>{`{horario}`}</code> e <code>{`{maps_link}`}</code> (endereço/mapa).
+                </p>
+                <div className="mb-3">
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Enviar Lembrete com Antecedência de</label>
+                  <select
+                    className="input-field py-2"
+                    value={reminderHoursBefore ?? ''}
+                    onChange={e => setReminderHoursBefore(e.target.value === '' ? null : parseInt(e.target.value))}
+                  >
+                    <option value="">Desativado</option>
+                    <option value="1">1 hora antes</option>
+                    <option value="2">2 horas antes (+ link do Maps automático)</option>
+                    <option value="4">4 horas antes</option>
+                    <option value="12">12 horas antes</option>
+                    <option value="24">24 horas antes (1 dia)</option>
+                    <option value="48">48 horas antes (2 dias)</option>
+                  </select>
+                </div>
+                {reminderHoursBefore !== null && (
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Mensagem do Lembrete (Opcional — deixe em branco para usar o padrão)</label>
+                    <textarea
+                      className="input-field min-h-[90px] resize-y text-sm font-medium text-gray-700"
+                      value={reminderMessage}
+                      onChange={e => setReminderMessage(e.target.value)}
+                      placeholder={`Olá {cliente}! 👋\n\nSeu agendamento com *{profissional}* é hoje às *{horario}*.\n\n{maps_link}`}
+                    />
+                    {reminderHoursBefore <= 2 && (
+                      <p className="text-[10px] text-teal-600 mt-1 ml-1">✅ O link do Maps será incluído automaticamente para lembretes de até 2 horas antes.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <button disabled={updateSettings.isPending} type="submit" className="btn-primary py-3 text-sm mt-2">
