@@ -263,6 +263,7 @@ export default function AdminDashboard() {
   const [reminderMessage, setReminderMessage] = useState('')
   // Customização visual página pública
   const [primaryColor, setPrimaryColor] = useState('#0d9488')
+  const [backgroundStyle, setBackgroundStyle] = useState('minimalist')
   const [bannerImageUrl, setBannerImageUrl] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
   const [socialInstagram, setSocialInstagram] = useState('')
@@ -333,6 +334,7 @@ export default function AdminDashboard() {
       setReminderHoursBefore((settings as any).reminder_hours_before ?? null)
       setReminderMessage(settings.reminder_message || '')
       if (settings.primary_color) setPrimaryColor(settings.primary_color)
+      if (settings.background_style) setBackgroundStyle(settings.background_style)
       if (settings.banner_image_url) setBannerImageUrl(settings.banner_image_url)
       if (settings.logo_url) setLogoUrl(settings.logo_url)
       if (settings.social_instagram) setSocialInstagram(settings.social_instagram)
@@ -603,6 +605,7 @@ export default function AdminDashboard() {
         reminder_hours_before: reminderHoursBefore,
         reminder_message: reminderMessage.trim() || undefined,
         primary_color: primaryColor,
+        background_style: backgroundStyle,
         banner_image_url: bannerImageUrl.trim() || undefined,
         logo_url: logoUrl.trim() || undefined,
         social_instagram: socialInstagram.trim() || undefined,
@@ -1051,24 +1054,55 @@ export default function AdminDashboard() {
                   <p className="text-[11px] text-gray-500 mb-4">Personalize o visual e as redes sociais da página que seus pacientes acessam para agendar.</p>
                 </div>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Cor Principal</label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="color" 
-                        value={primaryColor} 
-                        onChange={e => setPrimaryColor(e.target.value)} 
-                        className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-                      />
-                      <input 
-                        type="text" 
-                        value={primaryColor} 
-                        onChange={e => setPrimaryColor(e.target.value)} 
-                        className="input-field max-w-[120px] font-mono"
-                        placeholder="#000000"
-                      />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Cor Principal</label>
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="color" 
+                          value={primaryColor} 
+                          onChange={e => setPrimaryColor(e.target.value)} 
+                          className="w-12 h-12 rounded-xl cursor-pointer border-0 p-0 overflow-hidden" 
+                          style={{ minWidth: '48px' }}
+                        />
+                        <input 
+                          type="text" 
+                          value={primaryColor} 
+                          onChange={e => setPrimaryColor(e.target.value)} 
+                          className="input-field flex-1 font-mono" 
+                          placeholder="#0d9488"
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  {/* Seleção de Template de Fundo */}
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-2 block">Estilo de Fundo da Página (Template)</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { id: 'minimalist', name: 'Minimalista' },
+                        { id: 'soft_gradient', name: 'Degradê Suave' },
+                        { id: 'glassmorphism', name: 'Vidro Premium' },
+                        { id: 'dark_mode', name: 'Modo Escuro' },
+                        { id: 'pattern_dots', name: 'Pontilhado' },
+                        { id: 'elegant_waves', name: 'Ondas Elegantes' },
+                        { id: 'bold_gradient', name: 'Impacto Vibrante' }
+                      ].map(style => (
+                        <button
+                          key={style.id}
+                          type="button"
+                          onClick={() => setBackgroundStyle(style.id)}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${backgroundStyle === style.id ? 'border-teal-500 bg-teal-50 shadow-md' : 'border-gray-100 bg-white hover:border-teal-200'}`}
+                        >
+                          <span className={`text-xs font-bold ${backgroundStyle === style.id ? 'text-teal-700' : 'text-gray-600'}`}>
+                            {style.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Capa (Banner)</label>

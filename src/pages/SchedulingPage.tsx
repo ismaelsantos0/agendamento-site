@@ -7,6 +7,39 @@ import toast from 'react-hot-toast';
 import { useParams } from 'react-router-dom';
 import { useProfessionals, useProfessionalBySlug, useAvailability, useAppointments, useCreateAppointment, useSettings, useBlockouts, useSendOtp, useServices } from '../hooks/useAppointments';
 
+const getBackgroundStyles = (styleId: string | null | undefined, primaryColor: string | null | undefined) => {
+  const color = primaryColor || '#0d9488';
+  switch (styleId) {
+    case 'soft_gradient':
+      return { background: `linear-gradient(135deg, #ffffff 0%, ${color}15 100%)` };
+    case 'glassmorphism':
+      return { 
+        background: `radial-gradient(circle at 15% 50%, ${color}20, transparent 25%), radial-gradient(circle at 85% 30%, ${color}20, transparent 25%)`,
+        backgroundColor: '#f8fafc' 
+      };
+    case 'dark_mode':
+      return { backgroundColor: '#1e293b' };
+    case 'pattern_dots':
+      return { 
+        backgroundColor: '#ffffff',
+        backgroundImage: `radial-gradient(${color}20 1px, transparent 1px)`,
+        backgroundSize: '20px 20px'
+      };
+    case 'elegant_waves':
+      return { 
+        backgroundColor: '#f8fafc',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='${color.replace('#', '%23')}20' fill-opacity='1' d='M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,170.7C672,171,768,117,864,112C960,107,1056,149,1152,154.7C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3C/svg%3E")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'top'
+      };
+    case 'bold_gradient':
+      return { background: `linear-gradient(135deg, ${color}, ${color}dd)` };
+    case 'minimalist':
+    default:
+      return { backgroundColor: '#f8fafc' };
+  }
+}
+
 export default function SchedulingPage() {
   const { slug } = useParams<{ slug?: string }>();
   const { data: professionals = [], isLoading: loadingProfs } = useProfessionals();
@@ -200,7 +233,10 @@ export default function SchedulingPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center justify-center p-6 text-center">
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center p-6 text-center"
+        style={getBackgroundStyles(settings?.background_style, settings?.primary_color)}
+      >
         <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg mb-6 text-teal-600">
           <CheckCircle2 className="w-12 h-12" />
         </div>
@@ -219,7 +255,10 @@ export default function SchedulingPage() {
   const scheduledDateNum = selectedDate ? format(selectedDate, 'dd') : '--';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-12">
+    <div 
+      className="min-h-screen pb-12 transition-all duration-500"
+      style={getBackgroundStyles(settings?.background_style, settings?.primary_color)}
+    >
       {settings?.banner_image_url && (
         <div className="w-full h-48 md:h-64 overflow-hidden relative">
           <div className="absolute inset-0 bg-black/10 z-10" />

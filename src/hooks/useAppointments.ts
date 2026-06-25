@@ -322,6 +322,7 @@ export function useUpdateSettings() {
       primary_color?: string,
       banner_image_url?: string,
       logo_url?: string,
+      background_style?: string,
       social_instagram?: string,
       social_whatsapp?: string,
     }) => {
