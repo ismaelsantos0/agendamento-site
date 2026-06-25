@@ -48,30 +48,84 @@ const getThemeConfig = (styleId: string | null | undefined, primaryColor: string
         )
       };
       break;
-    case 'bold_gradient':
+    case 'minimalist':
       config = {
         ...config,
-        wrapperStyle: { background: `linear-gradient(135deg, ${color}, ${color}dd)` },
-        cardClasses: 'bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-transparent',
-        headerClasses: 'bg-white/90 border-transparent',
+        wrapperStyle: { backgroundColor: '#fcfcfc', overflow: 'hidden' },
+        cardClasses: 'bg-white border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
+        renderBackgroundElements: () => (
+          <div className="fixed top-[10%] left-[50%] -translate-x-1/2 w-[800px] h-[800px] rounded-full blur-[120px] opacity-20 pointer-events-none" style={{ backgroundColor: color, zIndex: 0 }} />
+        )
       };
       break;
-    case 'soft_gradient':
-      config.wrapperStyle = { background: `linear-gradient(135deg, #ffffff 0%, ${color}15 100%)` };
-      break;
-    case 'pattern_dots':
-      config.wrapperStyle = { 
-        backgroundColor: '#ffffff',
-        backgroundImage: `radial-gradient(${color}20 1px, transparent 1px)`,
-        backgroundSize: '20px 20px'
+    case 'aurora':
+      config = {
+        ...config,
+        wrapperStyle: { backgroundColor: '#0f172a', overflow: 'hidden' },
+        cardClasses: 'bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl',
+        textMain: 'text-slate-50',
+        textMuted: 'text-slate-300',
+        inputClasses: 'bg-white/5 border-white/10 text-slate-100 focus:bg-white/10 placeholder:text-slate-400',
+        headerClasses: 'bg-white/5 backdrop-blur-md border-white/10',
+        renderBackgroundElements: () => (
+          <>
+            <div className="fixed top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-[100%] mix-blend-screen filter blur-[80px] opacity-40 animate-aurora-flow pointer-events-none" style={{ backgroundColor: color, zIndex: 0 }} />
+            <div className="fixed bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-[100%] mix-blend-screen filter blur-[80px] opacity-30 animate-aurora-flow animation-delay-4000 pointer-events-none" style={{ backgroundColor: '#8b5cf6', zIndex: 0 }} />
+          </>
+        )
       };
       break;
-    case 'elegant_waves':
-      config.wrapperStyle = { 
-        backgroundColor: '#f8fafc',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='${color.replace('#', '%23')}15' fill-opacity='1' d='M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,170.7C672,171,768,117,864,112C960,107,1056,149,1152,154.7C1248,160,1344,128,1392,112L1440,96L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3C/svg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'top'
+    case 'galaxy':
+      config = {
+        ...config,
+        wrapperStyle: { backgroundColor: '#050510', overflow: 'hidden' },
+        cardClasses: 'bg-slate-900/60 backdrop-blur-md border-slate-800 shadow-[0_0_40px_rgba(0,0,0,0.5)]',
+        textMain: 'text-slate-100',
+        textMuted: 'text-slate-400',
+        inputClasses: 'bg-slate-800/80 border-slate-700 text-slate-100 focus:bg-slate-800 placeholder:text-slate-500',
+        headerClasses: 'bg-slate-900/50 backdrop-blur-md border-slate-800',
+        renderBackgroundElements: () => (
+          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#050510] to-[#000000]">
+            <div className="absolute top-[10%] left-[20%] w-1 h-1 bg-white rounded-full animate-twinkle"></div>
+            <div className="absolute top-[30%] left-[80%] w-1 h-1 bg-white rounded-full animate-twinkle animation-delay-2000"></div>
+            <div className="absolute top-[70%] left-[40%] w-2 h-2 bg-white rounded-full animate-twinkle animation-delay-4000 blur-[1px]"></div>
+            <div className="absolute top-[50%] left-[10%] w-1 h-1 bg-white rounded-full animate-twinkle delay-300"></div>
+            <div className="absolute top-[80%] left-[70%] w-1.5 h-1.5 bg-blue-200 rounded-full animate-twinkle delay-100"></div>
+            <div className="absolute top-0 left-[20%] w-full h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-20 -rotate-45 translate-y-[20vh] scale-x-150"></div>
+            <div className="absolute top-[10%] left-[50%] w-[40vw] h-[40vw] rounded-full blur-[100px] opacity-10" style={{ backgroundColor: color }}></div>
+          </div>
+        )
+      };
+      break;
+    case 'ocean':
+      config = {
+        ...config,
+        wrapperStyle: { backgroundColor: '#f4e4d4', overflow: 'hidden' },
+        cardClasses: 'bg-white/80 backdrop-blur-md border-white/50 shadow-xl',
+        renderBackgroundElements: () => (
+          <div className="fixed inset-0 z-0 pointer-events-none flex flex-col justify-end">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-transparent via-white to-transparent" />
+            <svg className="w-[200%] h-[30vh] opacity-40 animate-wave fill-teal-500/20" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,165.3C960,181,1056,203,1152,186.7C1248,171,1344,117,1392,90.7L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+            <svg className="w-[200%] h-[20vh] opacity-60 animate-wave animation-delay-2000 fill-teal-600/30 -ml-[50%]" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,192L48,181.3C96,171,192,149,288,149.3C384,149,480,171,576,186.7C672,203,768,213,864,197.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+          </div>
+        )
+      };
+      break;
+    case 'sunset':
+      config = {
+        ...config,
+        wrapperStyle: { background: 'linear-gradient(to bottom, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)', overflow: 'hidden' },
+        cardClasses: 'bg-white/90 backdrop-blur-sm border-white/50 shadow-xl',
+        renderBackgroundElements: () => (
+          <div className="fixed inset-0 z-0 pointer-events-none flex flex-col justify-end overflow-hidden">
+            <div className="absolute bottom-[10%] left-[50%] -translate-x-1/2 w-64 h-64 bg-orange-400 rounded-full blur-[2px] animate-sun-pulse shadow-[0_0_100px_rgba(251,146,60,0.8)]" />
+            <div className="w-full h-[15vh] bg-gradient-to-t from-orange-900/40 to-transparent" />
+          </div>
+        )
       };
       break;
   }

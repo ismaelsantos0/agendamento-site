@@ -1082,12 +1082,12 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {[
                         { id: 'minimalist', name: 'Minimalista' },
-                        { id: 'soft_gradient', name: 'Degradê Suave' },
                         { id: 'glassmorphism', name: 'Vidro Premium' },
                         { id: 'dark_mode', name: 'Modo Escuro' },
-                        { id: 'pattern_dots', name: 'Pontilhado' },
-                        { id: 'elegant_waves', name: 'Ondas Elegantes' },
-                        { id: 'bold_gradient', name: 'Impacto Vibrante' }
+                        { id: 'aurora', name: 'Aurora Vibrante' },
+                        { id: 'galaxy', name: 'Galáxia Profunda' },
+                        { id: 'ocean', name: 'Brisa Marítima' },
+                        { id: 'sunset', name: 'Pôr do Sol' }
                       ].map(style => (
                         <button
                           key={style.id}

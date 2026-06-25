@@ -60,3 +60,33 @@
   0% { opacity: 0; transform: translateY(20px); }
   100% { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes wave {
+  0% { transform: translateX(0) translateZ(0) scaleY(1); }
+  50% { transform: translateX(-25%) translateZ(0) scaleY(0.85); }
+  100% { transform: translateX(-50%) translateZ(0) scaleY(1); }
+}
+
+@keyframes sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; filter: blur(4px); }
+  50% { transform: scale(1.1); opacity: 1; filter: blur(8px); }
+}
+
+@keyframes aurora-flow {
+  0% { transform: rotate(0deg) scale(1) translate(0, 0); }
+  33% { transform: rotate(120deg) scale(1.2) translate(50px, -50px); }
+  66% { transform: rotate(240deg) scale(0.9) translate(-30px, 40px); }
+  100% { transform: rotate(360deg) scale(1) translate(0, 0); }
+}
+
+@layer utilities {
+  .animate-twinkle { animation: twinkle 4s ease-in-out infinite; }
+  .animate-wave { animation: wave 15s linear infinite; }
+  .animate-sun-pulse { animation: sun-pulse 8s ease-in-out infinite; }
+  .animate-aurora-flow { animation: aurora-flow 25s linear infinite; }
+}
