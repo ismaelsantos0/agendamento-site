@@ -285,7 +285,7 @@ export default function AdminDashboard() {
   const [servicesList, setServicesList] = useState<ServiceItem[]>([])
   
   // Estados de Abas da Central de Configurações
-  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'services' | 'general' | 'whatsapp'>('company')
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'services' | 'general' | 'whatsapp' | 'appearance'>('company')
 
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
@@ -997,6 +997,7 @@ export default function AdminDashboard() {
                 <>
                   <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
                   <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
+                  <button onClick={() => setActiveSettingsTab('appearance')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'appearance' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Aparência</button>
                   <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
                 </>
               )}
@@ -1007,6 +1008,77 @@ export default function AdminDashboard() {
             </div>
 
             {/* Conteúdo das Abas */}
+
+            {activeSettingsTab === 'appearance' && (
+              <form onSubmit={handleSaveSettings} className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">
+                <div>
+                  <h3 className="font-bold text-gray-800 text-sm">Página Pública ("Link na Bio")</h3>
+                  <p className="text-[11px] text-gray-500 mb-4">Personalize o visual e as redes sociais da página que seus pacientes acessam para agendar.</p>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Cor Principal</label>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="color" 
+                        value={primaryColor} 
+                        onChange={e => setPrimaryColor(e.target.value)} 
+                        className="w-10 h-10 rounded cursor-pointer border-0 p-0"
+                      />
+                      <input 
+                        type="text" 
+                        value={primaryColor} 
+                        onChange={e => setPrimaryColor(e.target.value)} 
+                        className="input-field max-w-[120px] font-mono"
+                        placeholder="#000000"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link da Imagem de Capa (Banner)</label>
+                    <input 
+                      type="url" 
+                      value={bannerImageUrl} 
+                      onChange={e => setBannerImageUrl(e.target.value)} 
+                      className="input-field" 
+                      placeholder="Ex: https://meusite.com/banner.jpg" 
+                    />
+                    {bannerImageUrl && (
+                      <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-24 relative">
+                        <img src={bannerImageUrl} alt="Banner Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link do Instagram</label>
+                      <input 
+                        type="url" 
+                        value={socialInstagram} 
+                        onChange={e => setSocialInstagram(e.target.value)} 
+                        className="input-field" 
+                        placeholder="Ex: https://instagram.com/suaclinica" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">WhatsApp de Contato (Opcional)</label>
+                      <input 
+                        type="text" 
+                        value={socialWhatsapp} 
+                        onChange={e => setSocialWhatsapp(e.target.value)} 
+                        className="input-field" 
+                        placeholder="Ex: 5511999999999" 
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-2">
+                  <button type="submit" disabled={updateSettings.isPending} className="btn-primary w-full text-sm py-3 rounded-xl shadow-md">
+                    {updateSettings.isPending ? 'Salvando...' : 'Salvar Aparência'}
+                  </button>
+                </div>
+              </form>
+            )}
             
             {activeSettingsTab === 'company' && (
               <form onSubmit={handleSaveSettings} className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">

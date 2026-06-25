@@ -92,6 +92,12 @@ export interface ClinicSettings {
   msg_feedback_cancelled?: string
   services?: string
   allow_custom_links: boolean
+  reminder_hours_before?: number | null
+  reminder_message?: string | null
+  primary_color?: string | null
+  banner_image_url?: string | null
+  social_instagram?: string | null
+  social_whatsapp?: string | null
 }
 
 export interface Blockout {

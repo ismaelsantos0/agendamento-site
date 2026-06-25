@@ -219,7 +219,13 @@ export default function SchedulingPage() {
   const scheduledDateNum = selectedDate ? format(selectedDate, 'dd') : '--';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-12">
+      {settings?.banner_image_url && (
+        <div className="w-full h-48 md:h-64 overflow-hidden relative">
+          <div className="absolute inset-0 bg-black/10 z-10" />
+          <img src={settings.banner_image_url} alt="Banner" className="w-full h-full object-cover" />
+        </div>
+      )}
       {/* OTP Modal */}
       {otpSent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
@@ -240,6 +246,7 @@ export default function SchedulingPage() {
                 onClick={handleConfirmOtp} 
                 disabled={createAppointment.isPending}
                 className="flex-1 py-3 text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 rounded-xl transition-colors shadow-lg shadow-teal-600/30"
+                style={{ backgroundColor: settings?.primary_color || '#0d9488', boxShadow: `0 10px 15px -3px ${settings?.primary_color || '#0d9488'}40` }}
               >
                 {createAppointment.isPending ? 'Validando...' : 'Confirmar'}
               </button>
@@ -253,7 +260,10 @@ export default function SchedulingPage() {
         <div className="max-w-2xl mx-auto px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30 shrink-0">
+              <div 
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0"
+                style={{ backgroundColor: settings?.primary_color || '#0d9488', boxShadow: `0 10px 15px -3px ${settings?.primary_color || '#0d9488'}40` }}
+              >
                 <span className="text-lg font-bold text-white">
                   {profBySlug ? profBySlug.name.substring(0,2).toUpperCase() : (settings?.clinic_name ? settings.clinic_name.substring(0,2).toUpperCase() : 'AG')}
                 </span>
@@ -267,11 +277,26 @@ export default function SchedulingPage() {
                 </p>
               </div>
             </div>
+            </div>
+            
+            {/* Redes Sociais */}
+            <div className="flex items-center gap-3">
+              {settings?.social_instagram && (
+                <a href={settings.social_instagram} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors border border-slate-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-600"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                </a>
+              )}
+              {settings?.social_whatsapp && (
+                <a href={`https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors border border-slate-200">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-24 -mt-2">
         {/* Card Principal */}
         <div className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-8">
           <div className="p-6 border-b border-slate-100 bg-white">
@@ -434,9 +459,10 @@ export default function SchedulingPage() {
                         onClick={() => setSelectedTime(slot)}
                         className={`py-3 rounded-xl text-sm font-bold transition-all ${
                           selectedTime === slot 
-                            ? 'bg-teal-600 text-white shadow-md scale-105' 
+                            ? 'text-white shadow-md scale-105' 
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
+                        style={selectedTime === slot ? { backgroundColor: settings?.primary_color || '#0d9488' } : undefined}
                       >
                         {slot}
                       </button>
