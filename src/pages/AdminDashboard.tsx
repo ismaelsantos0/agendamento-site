@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2, Link, LayoutDashboard, Users, Plus, Phone, Upload } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2, Link, Upload } from 'lucide-react'
 import ImageCropperModal from '../components/ImageCropperModal'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -2610,6 +2610,16 @@ export default function AdminDashboard() {
             
           </div>
         </div>
+      {/* Modal Image Cropper */}
+      {cropModalOpen && cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          aspectRatio={cropTarget === 'banner' ? 3 / 1 : 1 / 1}
+          title={cropTarget === 'banner' ? 'Recortar Capa (Banner)' : 'Recortar Logo'}
+          maxOutputWidth={cropTarget === 'banner' ? 1200 : 400}
+          onClose={() => { setCropModalOpen(false); setCropImageSrc(''); setCropTarget(null); }}
+          onCropComplete={handleCropComplete}
+        />
       )}
     </div>
   )
@@ -2973,18 +2983,6 @@ function UsersTabContent() {
           {users.length === 0 && <p className="text-sm text-gray-500">Nenhum usuário cadastrado.</p>}
         </div>
       </div>
-      
-      {/* Modal Image Cropper */}
-      {cropModalOpen && cropImageSrc && (
-        <ImageCropperModal
-          imageSrc={cropImageSrc}
-          aspectRatio={cropTarget === 'banner' ? 3 / 1 : 1 / 1}
-          title={cropTarget === 'banner' ? 'Recortar Capa (Banner)' : 'Recortar Logo'}
-          maxOutputWidth={cropTarget === 'banner' ? 1200 : 400}
-          onClose={() => { setCropModalOpen(false); setCropImageSrc(''); setCropTarget(null); }}
-          onCropComplete={handleCropComplete}
-        />
-      )}
     </div>
   )
 }
