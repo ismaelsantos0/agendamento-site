@@ -2417,7 +2417,7 @@ export default function AdminDashboard() {
                 onClick={async () => {
                   try {
                     // 1. Cria o profissional com o nome de usuário dele
-                    await createProf.mutateAsync({
+                    const newProf = await createProf.mutateAsync({
                       name: currentUser.username,
                       profession: 'Especialista',
                       contact_number: '',
@@ -2432,12 +2432,24 @@ export default function AdminDashboard() {
                     localStorage.setItem(`@agendamentos:onboarding_${currentUser.id}`, 'true')
                     // 3. Opcional: Flag de solo (se a lógica de front puder usar)
                     localStorage.setItem(`@agendamentos:is_solo_${currentUser.id}`, 'true')
+                    setIsSoloMode(true)
                     
                     setShowOnboarding(false)
                     setShowAppointmentsTab(false)
-                    setShowSettingsForm(true)
-                    setActiveSettingsTab('company')
-                    toast.success('Perfil Solo criado com sucesso! Preencha seus dados a seguir.')
+                    setShowSettingsForm(false)
+                    setShowProfForm(true)
+                    
+                    setEditingProfId(newProf.id)
+                    setEditProfName(newProf.name)
+                    setEditProfProfession(newProf.profession || '')
+                    setEditProfContact(newProf.contact_number || '')
+                    setEditProfNotifyNew(newProf.notify_new ?? true)
+                    setEditProfNotifyCancelled(newProf.notify_cancelled ?? true)
+                    setEditProfNotifyRescheduled(newProf.notify_rescheduled ?? true)
+                    setEditProfNotifyUpcoming(newProf.notify_upcoming ?? true)
+                    setEditProfHasCustomLink(newProf.has_custom_link ?? false)
+                    
+                    toast.success('Perfil Solo criado com sucesso! Preencha seus dados reais a seguir.')
                   } catch {
                     toast.error('Erro ao configurar perfil. Tente novamente.')
                   }
