@@ -969,7 +969,7 @@ export default function AdminDashboard() {
           <div className="card animate-fade-in space-y-6">
             <div className="space-y-3">
               <h3 className="font-bold text-gray-800 text-sm">Gerenciar Horários e Pausas</h3>
-              {role !== 'profissional' && (
+              {role !== 'profissional' && !isSoloMode && (
                 <select className="input-field py-2" value={ruleProfId} onChange={e => setRuleProfId(e.target.value)}>
                   <option value="">Selecione o profissional...</option>
                   {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
