@@ -131,28 +131,24 @@ const getThemeConfig = (styleId: string | null | undefined, primaryColor: string
     case 'ice_crystal':
       config = {
         ...config,
-        wrapperStyle: { backgroundColor: '#f0f9ff', overflow: 'hidden' }, // sky-50
-        cardClasses: 'bg-white/40 backdrop-blur-xl border-white/70 shadow-[0_0_60px_rgba(14,165,233,0.15)]',
-        textMain: 'text-slate-800',
-        textMuted: 'text-slate-500',
-        inputClasses: 'bg-white/60 border-white/50 text-slate-900 focus:bg-white/90 placeholder:text-slate-400',
-        headerClasses: 'bg-white/50 backdrop-blur-xl border-white/60',
+        wrapperStyle: { backgroundColor: '#082f49', overflow: 'hidden' }, // sky-900
+        cardClasses: 'bg-sky-900/40 backdrop-blur-md border-sky-800/50 shadow-[0_0_50px_rgba(0,0,0,0.5)]',
+        textMain: 'text-sky-50',
+        textMuted: 'text-sky-200/70',
+        inputClasses: 'bg-sky-950/50 border-sky-800/50 text-sky-50 focus:bg-sky-900/80 placeholder:text-sky-600',
+        headerClasses: 'bg-sky-950/60 backdrop-blur-md border-sky-800/50',
         renderBackgroundElements: () => (
-          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-100 via-sky-50 to-white">
-            {/* Ice Particles (Floating Snow/Crystals) */}
-            <div className="absolute bottom-0 left-[10%] w-3 h-3 bg-white rounded-full blur-[1px] animate-firefly shadow-[0_0_15px_#ffffff]"></div>
-            <div className="absolute bottom-0 left-[25%] w-2 h-2 bg-sky-200 rounded-full blur-[1px] animate-firefly animation-delay-2000 shadow-[0_0_10px_#bae6fd]"></div>
-            <div className="absolute bottom-0 left-[40%] w-4 h-4 bg-white rounded-full blur-[2px] animate-firefly delay-300 shadow-[0_0_20px_#ffffff]"></div>
-            <div className="absolute bottom-0 left-[60%] w-1.5 h-1.5 bg-cyan-200 rounded-full animate-firefly animation-delay-4000 shadow-[0_0_8px_#a5f3fc]"></div>
-            <div className="absolute bottom-0 left-[80%] w-3 h-3 bg-sky-100 rounded-full blur-[1px] animate-firefly delay-100 shadow-[0_0_15px_#e0f2fe]"></div>
-            <div className="absolute bottom-0 left-[90%] w-2 h-2 bg-white rounded-full animate-firefly delay-500 shadow-[0_0_12px_#ffffff]"></div>
+          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-sky-900 via-[#082f49] to-[#02111c]">
+            {/* Ice Crystals (Particles) */}
+            <div className="absolute bottom-0 left-[10%] w-2 h-2 bg-cyan-300 rounded-full blur-[1px] animate-firefly shadow-[0_0_10px_#67e8f9]"></div>
+            <div className="absolute bottom-0 left-[25%] w-1.5 h-1.5 bg-blue-300 rounded-full blur-[1px] animate-firefly animation-delay-2000 shadow-[0_0_8px_#93c5fd]"></div>
+            <div className="absolute bottom-0 left-[40%] w-3 h-3 bg-cyan-200 rounded-full blur-[2px] animate-firefly delay-300 shadow-[0_0_15px_#a5f3fc]"></div>
+            <div className="absolute bottom-0 left-[60%] w-1 h-1 bg-blue-400 rounded-full animate-firefly animation-delay-4000 shadow-[0_0_5px_#60a5fa]"></div>
+            <div className="absolute bottom-0 left-[80%] w-2 h-2 bg-cyan-400 rounded-full blur-[1px] animate-firefly delay-100 shadow-[0_0_12px_#22d3ee]"></div>
+            <div className="absolute bottom-0 left-[90%] w-1.5 h-1.5 bg-sky-300 rounded-full animate-firefly delay-500 shadow-[0_0_10px_#7dd3fc]"></div>
             
             {/* Soft background glow based on primary color */}
-            <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[60vw] h-[60vh] rounded-full blur-[140px] opacity-30 mix-blend-multiply" style={{ backgroundColor: color }}></div>
-            
-            {/* Frozen glass geometric overlays */}
-            <div className="absolute top-[10%] left-[-10%] w-[40vw] h-[40vw] bg-white/20 backdrop-blur-3xl rounded-full blur-[50px] opacity-60 mix-blend-overlay rotate-12"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-sky-200/30 backdrop-blur-3xl rounded-full blur-[80px] opacity-40 mix-blend-overlay -rotate-12"></div>
+            <div className="absolute bottom-[-10%] left-[50%] -translate-x-1/2 w-[60vw] h-[40vh] rounded-full blur-[120px] opacity-30" style={{ backgroundColor: color }}></div>
           </div>
         )
       };
