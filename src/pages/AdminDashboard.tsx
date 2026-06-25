@@ -1662,16 +1662,31 @@ export default function AdminDashboard() {
                         onClick={async () => {
                           let template = reminderMessage || 'Olá {cliente}! 👋\n\nSeu agendamento com *{profissional}* é hoje às *{horario}*.';
                           
+                          // Lógica idêntica ao backend para montar o link
+                          let simulatedMapsLink = '';
+                          if (addressInfo.mapsLink) {
+                            simulatedMapsLink = `\n\n📍 *Endereço:*\n${addressInfo.mapsLink}`;
+                          } else {
+                            const partes = [addressInfo.street, addressInfo.number, addressInfo.neighborhood, addressInfo.city, addressInfo.state].filter(Boolean);
+                            const enderecoTexto = partes.join(', ');
+                            if (enderecoTexto) {
+                              simulatedMapsLink = `\n\n📍 *Como Chegar:*\nhttps://maps.google.com/?q=${encodeURIComponent(enderecoTexto)}`;
+                            } else {
+                              simulatedMapsLink = `\n\n📍 *Endereço:*\n(Endereço não configurado no sistema)`;
+                            }
+                          }
+
                           // Anexa o maps automaticamente no teste se não usar a tag e for <= 2h
                           if (!template.includes('{maps_link}') && reminderHoursBefore && reminderHoursBefore <= 2) {
-                              template += '\n\n{maps_link}';
+                              template += simulatedMapsLink;
                           }
 
                           const texto = template
                             .replace('{cliente}', 'João Silva')
                             .replace('{profissional}', 'Dr. Teste')
                             .replace('{horario}', '14:30')
-                            .replace('{maps_link}', '📍 Endereço da clínica: Rua Teste, 123\nVeja no mapa: https://maps.google.com/?q=Clínica+Teste');
+                            .replace('{maps_link}', simulatedMapsLink);
+                            
                           try {
                             await testWp.mutateAsync({ telefone: testPhone, texto });
                             toast.success('Mensagem de Lembrete enviada!');
