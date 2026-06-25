@@ -2610,6 +2610,8 @@ export default function AdminDashboard() {
             
           </div>
         </div>
+      )}
+
       {/* Modal Image Cropper */}
       {cropModalOpen && cropImageSrc && (
         <ImageCropperModal
