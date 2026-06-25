@@ -33,7 +33,8 @@ import {
   useCompleteAppointment,
   usePatientHistory,
   useCreateAppointment,
-  usePatients
+  usePatients,
+  useResetWhatsapp
 } from '../hooks/useAppointments'
 import { useCurrentUser, useUsers, useCreateUser, useDeleteUser } from '../hooks/useUsers'
 
@@ -206,6 +207,7 @@ export default function AdminDashboard() {
   const updateSettings = useUpdateSettings()
   
   const logoutWhatsapp = useWhatsappLogout()
+  const resetWhatsapp = useResetWhatsapp()
   const { data: dbServices = [] } = useServices()
   const syncServices = useSyncServices()
   
@@ -1320,6 +1322,27 @@ export default function AdminDashboard() {
                     <LogOut className="w-4 h-4" /> Desconectar
                   </button>
                 )}
+                {/* Botão de Reset Force (sempre visível no Master para garantir socorro rápido) */}
+                <button 
+                  onClick={async () => {
+                    if(window.confirm('⚠️ AVISO: Isso vai deletar e recriar a instância do WhatsApp do zero, apagando o cache corrompido.\n\nTem certeza que deseja forçar o reset da instância?')){
+                      try {
+                        await resetWhatsapp.mutateAsync()
+                        toast.success('Instância resetada com sucesso! Gere um novo QR Code.')
+                        setQrCodeData('')
+                        refetchWpStatus()
+                      } catch (err: any) {
+                        toast.error('Erro ao resetar: ' + err.message)
+                      }
+                    }
+                  }}
+                  disabled={resetWhatsapp.isPending}
+                  className="flex items-center gap-1 p-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors text-xs font-bold"
+                  title="Tentar resolver erro 'Não foi possível conectar o dispositivo'"
+                >
+                  <RefreshCw className={`w-4 h-4 ${resetWhatsapp.isPending ? 'animate-spin' : ''}`} /> 
+                  {resetWhatsapp.isPending ? 'Resetando...' : 'Resetar Instância'}
+                </button>
                 <button onClick={() => refetchWpStatus()} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" title="Atualizar Status"><RefreshCw className="w-4 h-4 text-gray-600" /></button>
               </div>
             </div>

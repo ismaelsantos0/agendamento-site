@@ -127,6 +127,19 @@ export function useWhatsappLogout() {
   })
 }
 
+export function useResetWhatsapp() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post<{success: boolean, message: string}>('/whatsapp/reset')
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: whatsappKeys.status })
+    },
+  })
+}
+
 export function useCreateService() {
   const queryClient = useQueryClient()
   return useMutation({
