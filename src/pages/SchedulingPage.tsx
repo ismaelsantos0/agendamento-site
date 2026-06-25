@@ -128,6 +128,31 @@ const getThemeConfig = (styleId: string | null | undefined, primaryColor: string
         )
       };
       break;
+    case 'forest':
+      config = {
+        ...config,
+        wrapperStyle: { backgroundColor: '#022c22', overflow: 'hidden' }, // emerald-950
+        cardClasses: 'bg-emerald-900/40 backdrop-blur-md border-emerald-800/50 shadow-[0_0_50px_rgba(0,0,0,0.5)]',
+        textMain: 'text-emerald-50',
+        textMuted: 'text-emerald-200/70',
+        inputClasses: 'bg-emerald-950/50 border-emerald-800/50 text-emerald-50 focus:bg-emerald-900/80 placeholder:text-emerald-600',
+        headerClasses: 'bg-emerald-950/60 backdrop-blur-md border-emerald-800/50',
+        renderBackgroundElements: () => (
+          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-emerald-900 via-[#022c22] to-black">
+            {/* Fireflies */}
+            <div className="absolute bottom-0 left-[10%] w-2 h-2 bg-yellow-300 rounded-full blur-[1px] animate-firefly shadow-[0_0_10px_#fde047]"></div>
+            <div className="absolute bottom-0 left-[25%] w-1.5 h-1.5 bg-green-300 rounded-full blur-[1px] animate-firefly animation-delay-2000 shadow-[0_0_8px_#86efac]"></div>
+            <div className="absolute bottom-0 left-[40%] w-3 h-3 bg-yellow-200 rounded-full blur-[2px] animate-firefly delay-300 shadow-[0_0_15px_#fef08a]"></div>
+            <div className="absolute bottom-0 left-[60%] w-1 h-1 bg-green-400 rounded-full animate-firefly animation-delay-4000 shadow-[0_0_5px_#4ade80]"></div>
+            <div className="absolute bottom-0 left-[80%] w-2 h-2 bg-yellow-400 rounded-full blur-[1px] animate-firefly delay-100 shadow-[0_0_12px_#facc15]"></div>
+            <div className="absolute bottom-0 left-[90%] w-1.5 h-1.5 bg-emerald-300 rounded-full animate-firefly delay-500 shadow-[0_0_10px_#6ee7b7]"></div>
+            
+            {/* Soft background glow based on primary color */}
+            <div className="absolute bottom-[-10%] left-[50%] -translate-x-1/2 w-[60vw] h-[40vh] rounded-full blur-[120px] opacity-20" style={{ backgroundColor: color }}></div>
+          </div>
+        )
+      };
+      break;
   }
   return config;
 }

@@ -1087,7 +1087,8 @@ export default function AdminDashboard() {
                         { id: 'aurora', name: 'Aurora Vibrante' },
                         { id: 'galaxy', name: 'Galáxia Profunda' },
                         { id: 'ocean', name: 'Brisa Marítima' },
-                        { id: 'sunset', name: 'Pôr do Sol' }
+                        { id: 'sunset', name: 'Pôr do Sol' },
+                        { id: 'forest', name: 'Floresta Encantada' }
                       ].map(style => (
                         <button
                           key={style.id}
