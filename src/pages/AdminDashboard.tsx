@@ -1045,7 +1045,6 @@ export default function AdminDashboard() {
               {(role === 'master' || role === 'clinica') && (
                 <>
                   <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
-                  <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
                   <button onClick={() => setActiveSettingsTab('appearance')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'appearance' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Aparência</button>
                   <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
                 </>
@@ -1195,7 +1194,7 @@ export default function AdminDashboard() {
               <form onSubmit={handleSaveSettings} className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">
                 <h3 className="font-bold text-gray-800 text-sm">Dados da Clínica</h3>
                 
-                <fieldset disabled={role !== 'master'} className="space-y-6">
+                <fieldset disabled={role !== 'master' && role !== 'clinica'} className="space-y-6">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Nome da Clínica / Empresa</label>
                   <input className="input-field" value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Ex: Clínica Saúde Ideal" />
@@ -1442,36 +1441,35 @@ export default function AdminDashboard() {
                     {syncServices.isPending ? 'Salvando...' : 'Salvar Serviços'}
                   </button>
                 </div>
-              </div>
-            )}
-
-            {activeSettingsTab === 'general' && (
-              <form onSubmit={handleSaveSettings} className="space-y-4 animate-fade-in bg-white p-4 rounded-xl border border-gray-200">
-                <h3 className="font-bold text-gray-800 text-sm">Regras de Agendamento</h3>
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Duração de cada Consulta (em minutos)</label>
-                  <select className="input-field py-2" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)}>
-                    <option value="15">15 Minutos</option>
-                    <option value="20">20 Minutos</option>
-                    <option value="30">30 Minutos</option>
-                    <option value="45">45 Minutos</option>
-                    <option value="60">1 Hora (60 min)</option>
-                    <option value="90">1 Hora e meia (90 min)</option>
-                    <option value="120">2 Horas (120 min)</option>
-                  </select>
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <h3 className="font-bold text-gray-800 text-sm mb-4">Regras de Agendamento</h3>
+                  <form onSubmit={handleSaveSettings} className="space-y-4">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Duração de cada Consulta (em minutos)</label>
+                      <select className="input-field py-2" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)}>
+                        <option value="15">15 Minutos</option>
+                        <option value="20">20 Minutos</option>
+                        <option value="30">30 Minutos</option>
+                        <option value="45">45 Minutos</option>
+                        <option value="60">1 Hora (60 min)</option>
+                        <option value="90">1 Hora e meia (90 min)</option>
+                        <option value="120">2 Horas (120 min)</option>
+                      </select>
+                    </div>
+                    {role === 'master' && (
+                      <div className="md:col-span-12 mt-4 pt-4 border-t border-gray-100">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={allowCustomLinks} onChange={e => setAllowCustomLinks(e.target.checked)} className="rounded text-primary" />
+                          <span className="text-sm font-bold text-gray-800">Permitir Geração de Links Exclusivos para Profissionais (SaaS)</span>
+                        </label>
+                      </div>
+                    )}
+                    <button disabled={updateSettings.isPending} type="submit" className="btn-primary bg-gray-800 hover:bg-gray-900 w-full sm:w-auto py-2 text-xs mt-2">
+                      {updateSettings.isPending ? 'Salvando...' : 'Salvar Regras'}
+                    </button>
+                  </form>
                 </div>
-                {role === 'master' && (
-                  <div className="md:col-span-12 mt-4 pt-4 border-t border-gray-100">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={allowCustomLinks} onChange={e => setAllowCustomLinks(e.target.checked)} className="rounded text-primary" />
-                      <span className="text-sm font-bold text-gray-800">Permitir Geração de Links Exclusivos para Profissionais (SaaS)</span>
-                    </label>
-                  </div>
-                )}
-                <button disabled={updateSettings.isPending} type="submit" className="btn-primary bg-gray-800 hover:bg-gray-900 w-full sm:w-auto py-2 text-xs mt-2">
-                  {updateSettings.isPending ? 'Salvando...' : 'Salvar Configuração'}
-                </button>
-              </form>
+              </div>
             )}
 
             {activeSettingsTab === 'whatsapp' && (
