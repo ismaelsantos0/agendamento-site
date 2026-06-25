@@ -1660,12 +1660,18 @@ export default function AdminDashboard() {
                         type="button"
                         disabled={testWp.isPending || !testPhone}
                         onClick={async () => {
-                          const template = reminderMessage || 'Olá {cliente}! 👋\n\nSeu agendamento com *{profissional}* é hoje às *{horario}*.\n\n📍 Endereço da clínica será incluído aqui.';
+                          let template = reminderMessage || 'Olá {cliente}! 👋\n\nSeu agendamento com *{profissional}* é hoje às *{horario}*.';
+                          
+                          // Anexa o maps automaticamente no teste se não usar a tag e for <= 2h
+                          if (!template.includes('{maps_link}') && reminderHoursBefore && reminderHoursBefore <= 2) {
+                              template += '\n\n{maps_link}';
+                          }
+
                           const texto = template
                             .replace('{cliente}', 'João Silva')
                             .replace('{profissional}', 'Dr. Teste')
                             .replace('{horario}', '14:30')
-                            .replace('{maps_link}', '📍 https://maps.google.com/?q=Clínica+Teste');
+                            .replace('{maps_link}', '📍 Endereço da clínica: Rua Teste, 123\nVeja no mapa: https://maps.google.com/?q=Clínica+Teste');
                           try {
                             await testWp.mutateAsync({ telefone: testPhone, texto });
                             toast.success('Mensagem de Lembrete enviada!');
