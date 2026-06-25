@@ -1183,7 +1183,8 @@ export default function AdminDashboard() {
                               );
                             })()}
                             {professionals.map(p => {
-                              const isSelected = svc.professional_ids?.includes(p.id);
+                              const currentIds = svc.professional_ids || [];
+                              const isSelected = currentIds.length === 0 || currentIds.includes(p.id);
                               return (
                                 <label key={p.id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-colors ${isSelected ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
                                   <input
@@ -1192,11 +1193,14 @@ export default function AdminDashboard() {
                                     checked={isSelected || false}
                                     onChange={(e) => {
                                       const newServices = [...servicesList];
-                                      const currentIds = newServices[index].professional_ids || [];
+                                      let ids = newServices[index].professional_ids || [];
+                                      if (ids.length === 0) {
+                                        ids = professionals.map(prof => prof.id);
+                                      }
                                       if (e.target.checked) {
-                                        newServices[index].professional_ids = [...currentIds, p.id];
+                                        newServices[index].professional_ids = [...ids, p.id];
                                       } else {
-                                        newServices[index].professional_ids = currentIds.filter(id => id !== p.id);
+                                        newServices[index].professional_ids = ids.filter(id => id !== p.id);
                                       }
                                       setServicesList(newServices);
                                     }}
