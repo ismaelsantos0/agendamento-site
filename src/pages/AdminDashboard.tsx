@@ -385,6 +385,24 @@ export default function AdminDashboard() {
   }, [currentUser, professionals])
 
   useEffect(() => {
+    // Exibe a aba de Configurações automaticamente para o OnboardingTour
+    if (role === 'clinica' && settings && !settings.clinic_name && !showOnboarding) {
+      const hasSeenTour = sessionStorage.getItem('onboarding_tour_completed')
+      const hasDismissedInitModal = currentUser ? localStorage.getItem(`@agendamentos:onboarding_${currentUser.id}`) : null;
+      
+      if (!hasSeenTour && hasDismissedInitModal === 'true') {
+        setShowAppointmentsTab(false)
+        setShowPatientsTab(false)
+        setShowUsersTab(false)
+        setShowProfForm(false)
+        setShowRuleForm(false)
+        setShowSettingsForm(true)
+        setActiveSettingsTab('company')
+      }
+    }
+  }, [role, settings, showOnboarding, currentUser])
+
+  useEffect(() => {
     if (currentUser) {
       setIsSoloMode(localStorage.getItem(`@agendamentos:is_solo_${currentUser.id}`) === 'true')
     }
@@ -2416,7 +2434,10 @@ export default function AdminDashboard() {
                     localStorage.setItem(`@agendamentos:is_solo_${currentUser.id}`, 'true')
                     
                     setShowOnboarding(false)
-                    toast.success('Perfil Solo criado com sucesso! Tudo pronto.')
+                    setShowAppointmentsTab(false)
+                    setShowSettingsForm(true)
+                    setActiveSettingsTab('company')
+                    toast.success('Perfil Solo criado com sucesso! Preencha seus dados a seguir.')
                   } catch {
                     toast.error('Erro ao configurar perfil. Tente novamente.')
                   }
@@ -2435,8 +2456,10 @@ export default function AdminDashboard() {
                   localStorage.setItem(`@agendamentos:onboarding_${currentUser.id}`, 'true')
                   localStorage.setItem(`@agendamentos:is_solo_${currentUser.id}`, 'false')
                   setShowOnboarding(false)
-                  setShowProfForm(true)
                   setShowAppointmentsTab(false)
+                  setShowProfForm(false)
+                  setShowSettingsForm(true)
+                  setActiveSettingsTab('company')
                 }}
                 className="w-full flex items-center justify-between p-4 rounded-xl border-2 border-indigo-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group text-left"
               >

@@ -18,13 +18,15 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
-    if (role === 'clinica') {
+    if (role === 'clinica' && activeSettingsTab === 'company') {
       const hasSeenTour = sessionStorage.getItem('onboarding_tour_completed');
       if (!hasSeenTour) {
-        setRun(true);
+        // Delay para garantir que o formulário foi renderizado no DOM
+        const timer = setTimeout(() => setRun(true), 500);
+        return () => clearTimeout(timer);
       }
     }
-  }, [role]);
+  }, [role, activeSettingsTab]);
 
   const steps: Step[] = [
     {
