@@ -140,6 +140,21 @@ export function useResetWhatsapp() {
   })
 }
 
+export function useResetSystem() {
+  return useMutation({
+    mutationFn: async (payload: {
+      reset_appointments: boolean
+      reset_professionals: boolean
+      reset_services: boolean
+      reset_users: boolean
+      reset_settings: boolean
+    }) => {
+      const { data } = await api.post<{status: string, message: string}>('/settings/reset', payload)
+      return data
+    }
+  })
+}
+
 export function useCreateService() {
   const queryClient = useQueryClient()
   return useMutation({

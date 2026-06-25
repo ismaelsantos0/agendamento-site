@@ -35,7 +35,8 @@ import {
   usePatientHistory,
   useCreateAppointment,
   usePatients,
-  useResetWhatsapp
+  useResetWhatsapp,
+  useResetSystem
 } from '../hooks/useAppointments'
 import { useCurrentUser, useUsers, useCreateUser, useDeleteUser } from '../hooks/useUsers'
 
@@ -319,7 +320,17 @@ export default function AdminDashboard() {
   const [servicesList, setServicesList] = useState<ServiceItem[]>([])
   
   // Estados de Abas da Central de Configurações
-  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'services' | 'general' | 'whatsapp' | 'appearance'>('company')
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'company' | 'services' | 'general' | 'whatsapp' | 'appearance' | 'reset'>('company')
+
+  // Estados do Reset de Sistema
+  const resetSystem = useResetSystem()
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resetConfirmText, setResetConfirmText] = useState('')
+  const [resetAppointments, setResetAppointments] = useState(true)
+  const [resetProfessionals, setResetProfessionals] = useState(false)
+  const [resetServices, setResetServices] = useState(false)
+  const [resetUsers, setResetUsers] = useState(false)
+  const [resetSettings, setResetSettings] = useState(false)
 
   // Atualiza input quando carregar settings do backend
   useEffect(() => {
@@ -1037,6 +1048,7 @@ export default function AdminDashboard() {
                   <button onClick={() => setActiveSettingsTab('general')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'general' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Gerais</button>
                   <button onClick={() => setActiveSettingsTab('appearance')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'appearance' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Aparência</button>
                   <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
+                  <button onClick={() => setActiveSettingsTab('reset')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'reset' ? 'bg-red-500 text-white shadow-sm' : 'text-red-400 hover:text-red-600'}`}>Limpar Sistema</button>
                 </>
               )}
               {/* Aba WhatsApp visível para clínica também (textos e lembretes) */}
@@ -1880,6 +1892,132 @@ export default function AdminDashboard() {
                 {updateSettings.isPending ? 'Salvando...' : 'Salvar Textos Personalizados'}
               </button>
             </form>
+          </div>
+        )}
+
+        {activeSettingsTab === 'reset' && role === 'master' && (
+          <div className="animate-fade-in space-y-6">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-red-100 rounded-full blur-3xl opacity-50 pointer-events-none -mr-20 -mt-20"></div>
+              
+              <div className="relative z-10 flex items-start gap-4">
+                <div className="bg-red-100 p-3 rounded-full text-red-600">
+                  <Trash2 className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-red-900 mb-2">Reset do Sistema (Zona de Perigo)</h3>
+                  <p className="text-sm text-red-700 font-medium max-w-2xl mb-4">
+                    Esta ação apagará dados permanentemente do banco de dados. Escolha com muito cuidado o que deseja excluir. Uma vez confirmada, a operação não poderá ser desfeita.
+                  </p>
+                  
+                  <div className="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-red-100 space-y-3 max-w-xl">
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-white/50 transition-colors">
+                      <input type="checkbox" checked={resetAppointments} onChange={e => setResetAppointments(e.target.checked)} className="w-5 h-5 accent-red-600 rounded" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">Apagar Agendamentos</p>
+                        <p className="text-xs text-gray-500">Exclui todo o histórico e futuros agendamentos dos pacientes.</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-white/50 transition-colors">
+                      <input type="checkbox" checked={resetProfessionals} onChange={e => setResetProfessionals(e.target.checked)} className="w-5 h-5 accent-red-600 rounded" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">Apagar Profissionais (e Horários)</p>
+                        <p className="text-xs text-gray-500">Exclui especialistas, bloqueios, e regras. (Requer apagar agendamentos também).</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-white/50 transition-colors">
+                      <input type="checkbox" checked={resetServices} onChange={e => setResetServices(e.target.checked)} className="w-5 h-5 accent-red-600 rounded" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">Apagar Serviços</p>
+                        <p className="text-xs text-gray-500">Remove todos os serviços cadastrados na clínica.</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-white/50 transition-colors">
+                      <input type="checkbox" checked={resetUsers} onChange={e => setResetUsers(e.target.checked)} className="w-5 h-5 accent-red-600 rounded" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">Apagar Usuários (Exceto Master)</p>
+                        <p className="text-xs text-gray-500">Exclui os logins de recepção e especialistas.</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-white/50 transition-colors">
+                      <input type="checkbox" checked={resetSettings} onChange={e => setResetSettings(e.target.checked)} className="w-5 h-5 accent-red-600 rounded" />
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">Resetar Configurações</p>
+                        <p className="text-xs text-gray-500">Retorna cores, mensagens e dados da empresa ao padrão.</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="mt-6">
+                    {!showResetModal ? (
+                      <button 
+                        onClick={() => setShowResetModal(true)}
+                        disabled={!resetAppointments && !resetProfessionals && !resetServices && !resetUsers && !resetSettings}
+                        className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        Continuar para Limpeza...
+                      </button>
+                    ) : (
+                      <div className="animate-fade-in bg-white border-2 border-red-200 p-5 rounded-xl shadow-lg max-w-xl">
+                        <h4 className="text-red-600 font-bold mb-2 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                          Confirmação de Segurança
+                        </h4>
+                        <p className="text-sm text-gray-700 font-medium mb-3">
+                          Para prosseguir com a exclusão irreversível dos módulos selecionados, digite a palavra <strong className="text-red-600">LIMPAR</strong> abaixo:
+                        </p>
+                        <input 
+                          type="text" 
+                          placeholder="Digite LIMPAR" 
+                          className="input-field mb-4 w-full" 
+                          value={resetConfirmText}
+                          onChange={e => setResetConfirmText(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              setShowResetModal(false)
+                              setResetConfirmText('')
+                            }}
+                            className="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex-1"
+                          >
+                            Cancelar
+                          </button>
+                          <button 
+                            disabled={resetConfirmText !== 'LIMPAR' || resetSystem.isPending}
+                            onClick={async () => {
+                              try {
+                                await resetSystem.mutateAsync({
+                                  reset_appointments: resetAppointments,
+                                  reset_professionals: resetProfessionals,
+                                  reset_services: resetServices,
+                                  reset_users: resetUsers,
+                                  reset_settings: resetSettings
+                                })
+                                toast.success('Sistema limpo com sucesso!')
+                                setShowResetModal(false)
+                                setResetConfirmText('')
+                                // Reload to refetch everything cleanly
+                                setTimeout(() => window.location.reload(), 1500)
+                              } catch (err: any) {
+                                toast.error(`Erro ao limpar: ${err?.response?.data?.detail || err.message}`)
+                              }
+                            }}
+                            className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-1 flex items-center justify-center gap-2"
+                          >
+                            {resetSystem.isPending ? (
+                              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Limpando...</>
+                            ) : (
+                              <><Trash2 className="w-4 h-4" /> EXECUTAR LIMPEZA</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
           </div>
