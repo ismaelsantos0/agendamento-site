@@ -1405,14 +1405,53 @@ export default function AdminDashboard() {
                 </p>
               </div>
               
+              {/* Campo de telefone compartilhado para testes - apenas master */}
+              {role === 'master' && (
+                <div className="bg-green-50/60 border border-green-100 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  <Send className="w-4 h-4 text-green-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-[11px] font-bold text-green-800 mb-1">Telefone para Testes</p>
+                    <input
+                      type="tel"
+                      placeholder="Ex: 5592999999999"
+                      className="input-field py-1.5 text-sm w-full sm:w-64"
+                      value={testPhone}
+                      onChange={e => setTestPhone(e.target.value.replace(/\D/g, ''))}
+                    />
+                  </div>
+                  <p className="text-[10px] text-green-700">Este número receberá os testes de cada mensagem abaixo.</p>
+                </div>
+              )}
+              
               <div>
                 <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Mensagem de Boas Vindas (Disparo Imediato)</label>
                 <textarea 
                   className="input-field min-h-[100px] resize-y text-sm font-medium text-gray-700" 
                   value={msgCreated} 
                   onChange={e => setMsgCreated(e.target.value)} 
-                  placeholder="Olá {cliente}! 📅 Seu agendamento com {profissional} para {data} foi registrado com sucesso!\n\n⏳ Nós enviaremos uma mensagem de confirmação 2 horas antes da consulta." 
+                  placeholder="Olá {cliente}! 📅 Seu agendamento com {profissional} para {data} foi registrado com sucesso!\n\n⏳ Nós enviaremos uma mensagem de confirmação antes da consulta." 
                 />
+                {role === 'master' && (
+                  <button
+                    type="button"
+                    disabled={testWp.isPending || !testPhone}
+                    onClick={async () => {
+                      const texto = (msgCreated || 'Olá {cliente}! 📅 Seu agendamento com {profissional} para {data} foi registrado com sucesso!')
+                        .replace('{cliente}', 'João Silva')
+                        .replace('{profissional}', 'Dr. Teste')
+                        .replace('{data}', 'amanhã às 14h');
+                      try {
+                        await testWp.mutateAsync({ telefone: testPhone, texto });
+                        toast.success('Mensagem de Boas-Vindas enviada!');
+                      } catch (err: any) {
+                        toast.error(err?.response?.data?.detail || 'Falha ao enviar.');
+                      }
+                    }}
+                    className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-3 h-3" /> Testar Boas-Vindas
+                  </button>
+                )}
               </div>
               
               <div>
@@ -1508,6 +1547,24 @@ export default function AdminDashboard() {
                   onChange={e => setMsgFeedbackConfirmed(e.target.value)} 
                   placeholder="Seu agendamento foi *CONFIRMADO* com sucesso! Aguardamos você." 
                 />
+                {role === 'master' && (
+                  <button
+                    type="button"
+                    disabled={testWp.isPending || !testPhone}
+                    onClick={async () => {
+                      const texto = msgFeedbackConfirmed || 'Seu agendamento foi *CONFIRMADO* com sucesso! Aguardamos você.';
+                      try {
+                        await testWp.mutateAsync({ telefone: testPhone, texto });
+                        toast.success('Resposta de Confirmação enviada!');
+                      } catch (err: any) {
+                        toast.error(err?.response?.data?.detail || 'Falha ao enviar.');
+                      }
+                    }}
+                    className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-3 h-3" /> Testar Resposta de Confirmado
+                  </button>
+                )}
               </div>
 
               <div>
@@ -1518,6 +1575,24 @@ export default function AdminDashboard() {
                   onChange={e => setMsgFeedbackCancelled(e.target.value)} 
                   placeholder="Seu agendamento foi *CANCELADO*." 
                 />
+                {role === 'master' && (
+                  <button
+                    type="button"
+                    disabled={testWp.isPending || !testPhone}
+                    onClick={async () => {
+                      const texto = msgFeedbackCancelled || 'Seu agendamento foi *CANCELADO*.';
+                      try {
+                        await testWp.mutateAsync({ telefone: testPhone, texto });
+                        toast.success('Resposta de Cancelamento enviada!');
+                      } catch (err: any) {
+                        toast.error(err?.response?.data?.detail || 'Falha ao enviar.');
+                      }
+                    }}
+                    className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-3 h-3" /> Testar Resposta de Cancelado
+                  </button>
+                )}
               </div>
 
               {/* Seção de Lembretes Automáticos */}
@@ -1556,6 +1631,29 @@ export default function AdminDashboard() {
                     />
                     {reminderHoursBefore <= 2 && (
                       <p className="text-[10px] text-teal-600 mt-1 ml-1">✅ O link do Maps será incluído automaticamente para lembretes de até 2 horas antes.</p>
+                    )}
+                    {role === 'master' && (
+                      <button
+                        type="button"
+                        disabled={testWp.isPending || !testPhone}
+                        onClick={async () => {
+                          const template = reminderMessage || 'Olá {cliente}! 👋\n\nSeu agendamento com *{profissional}* é hoje às *{horario}*.\n\n📍 Endereço da clínica será incluído aqui.';
+                          const texto = template
+                            .replace('{cliente}', 'João Silva')
+                            .replace('{profissional}', 'Dr. Teste')
+                            .replace('{horario}', '14:30')
+                            .replace('{maps_link}', '📍 https://maps.google.com/?q=Clínica+Teste');
+                          try {
+                            await testWp.mutateAsync({ telefone: testPhone, texto });
+                            toast.success('Mensagem de Lembrete enviada!');
+                          } catch (err: any) {
+                            toast.error(err?.response?.data?.detail || 'Falha ao enviar.');
+                          }
+                        }}
+                        className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition-colors disabled:opacity-50"
+                      >
+                        <Send className="w-3 h-3" /> Testar Mensagem de Lembrete
+                      </button>
                     )}
                   </div>
                 )}
