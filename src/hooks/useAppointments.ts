@@ -321,6 +321,7 @@ export function useUpdateSettings() {
       reminder_message?: string,
       primary_color?: string,
       banner_image_url?: string,
+      logo_url?: string,
       social_instagram?: string,
       social_whatsapp?: string,
     }) => {
