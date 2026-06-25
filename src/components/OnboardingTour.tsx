@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
-import { useAuth } from '../hooks/useAuth';
 
 interface OnboardingTourProps {
   clinicName: string;
   addressInfo: { cep: string; street: string };
   activeSettingsTab: string;
+  role: string;
 }
 
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({
   clinicName,
   addressInfo,
-  activeSettingsTab
+  activeSettingsTab,
+  role
 }) => {
-  const { user } = useAuth();
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
-    if (user?.role === 'clinica') {
+    if (role === 'clinica') {
       const hasSeenTour = sessionStorage.getItem('onboarding_tour_completed');
       if (!hasSeenTour) {
         setRun(true);
       }
     }
-  }, [user]);
+  }, [role]);
 
   const steps: Step[] = [
     {

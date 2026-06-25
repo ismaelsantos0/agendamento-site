@@ -666,6 +666,7 @@ export default function AdminDashboard() {
         clinicName={clinicName}
         addressInfo={addressInfo}
         activeSettingsTab={activeSettingsTab}
+        role={role}
       />
       <header className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-teal-600 text-white pt-10 pb-8 px-6 rounded-b-[2.5rem] shadow-lg">
         {/* Abstract Background Elements */}
