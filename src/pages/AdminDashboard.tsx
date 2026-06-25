@@ -37,6 +37,48 @@ import {
 } from '../hooks/useAppointments'
 import { useCurrentUser, useUsers, useCreateUser, useDeleteUser } from '../hooks/useUsers'
 
+const SERVICE_TEMPLATES = {
+  estetica: {
+    label: 'Estética & Beleza',
+    services: [
+      { name: 'Limpeza de Pele', duration_minutes: 60, price: '' },
+      { name: 'Drenagem Linfática', duration_minutes: 50, price: '' },
+      { name: 'Botox / Preenchimento', duration_minutes: 40, price: '' },
+    ]
+  },
+  medico: {
+    label: 'Consultório Médico',
+    services: [
+      { name: 'Consulta Inicial', duration_minutes: 60, price: '' },
+      { name: 'Consulta de Retorno', duration_minutes: 30, price: '' },
+      { name: 'Avaliação Específica', duration_minutes: 45, price: '' },
+    ]
+  },
+  terapia: {
+    label: 'Saúde Mental',
+    services: [
+      { name: 'Psicoterapia Individual', duration_minutes: 50, price: '' },
+      { name: 'Terapia de Casal', duration_minutes: 90, price: '' },
+    ]
+  },
+  odonto: {
+    label: 'Odontologia',
+    services: [
+      { name: 'Avaliação / Orçamento', duration_minutes: 30, price: '' },
+      { name: 'Limpeza (Profilaxia)', duration_minutes: 45, price: '' },
+      { name: 'Clareamento Dental', duration_minutes: 60, price: '' },
+    ]
+  },
+  salao: {
+    label: 'Salão / Barbearia',
+    services: [
+      { name: 'Corte', duration_minutes: 30, price: '' },
+      { name: 'Corte + Barba', duration_minutes: 60, price: '' },
+      { name: 'Coloração / Luzes', duration_minutes: 120, price: '' },
+    ]
+  }
+}
+
 // Decodifica o payload do JWT para obter o role imediatamente,
 // sem precisar esperar a chamada /auth/me. O JWT e base64 e pode
 // ser lido no cliente com seguranca (apenas validado no servidor).
@@ -64,6 +106,18 @@ export default function AdminDashboard() {
   const [filterPeriod, setFilterPeriod] = useState<'hoje' | 'semana' | 'mes' | 'todos'>('hoje')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterProfessional, setFilterProfessional] = useState<string>('')
+
+  const applyTemplate = (templateKey: keyof typeof SERVICE_TEMPLATES) => {
+    const template = SERVICE_TEMPLATES[templateKey]
+    const newServices = template.services.map(s => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: s.name,
+      duration_minutes: s.duration_minutes,
+      price: s.price
+    }))
+    setServicesList([...servicesList, ...newServices])
+    toast.success(`Serviços de ${template.label} adicionados!`)
+  }
   
   let startDate: string | undefined = undefined
   let endDate: string | undefined = undefined
@@ -1033,6 +1087,25 @@ export default function AdminDashboard() {
                   >
                     + Novo Serviço
                   </button>
+                </div>
+
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                  <h4 className="text-xs font-bold text-blue-800 mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-blue-500" />
+                    Adicionar Serviços Rápidos
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(SERVICE_TEMPLATES).map(([key, tpl]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => applyTemplate(key as keyof typeof SERVICE_TEMPLATES)}
+                        className="text-[11px] font-bold px-3 py-1.5 bg-white border border-blue-200 text-blue-700 rounded-full hover:bg-blue-100 hover:border-blue-300 transition-colors shadow-sm flex items-center gap-1"
+                      >
+                        <span className="text-blue-500 text-sm leading-none">+</span> {tpl.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 
                 {servicesList.length === 0 ? (
