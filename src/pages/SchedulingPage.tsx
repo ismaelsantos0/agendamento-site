@@ -261,12 +261,16 @@ export default function SchedulingPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0"
-                style={{ backgroundColor: settings?.primary_color || '#0d9488', boxShadow: `0 10px 15px -3px ${settings?.primary_color || '#0d9488'}40` }}
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ${settings?.logo_url ? 'overflow-hidden bg-white' : ''}`}
+                style={!settings?.logo_url ? { backgroundColor: settings?.primary_color || '#0d9488', boxShadow: `0 10px 15px -3px ${settings?.primary_color || '#0d9488'}40` } : undefined}
               >
-                <span className="text-lg font-bold text-white">
-                  {profBySlug ? profBySlug.name.substring(0,2).toUpperCase() : (settings?.clinic_name ? settings.clinic_name.substring(0,2).toUpperCase() : 'AG')}
-                </span>
+                {settings?.logo_url ? (
+                  <img src={settings.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-lg font-bold text-white">
+                    {profBySlug ? profBySlug.name.substring(0,2).toUpperCase() : (settings?.clinic_name ? settings.clinic_name.substring(0,2).toUpperCase() : 'AG')}
+                  </span>
+                )}
               </div>
               <div>
                 <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">

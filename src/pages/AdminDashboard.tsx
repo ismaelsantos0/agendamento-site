@@ -261,8 +261,9 @@ export default function AdminDashboard() {
   const [reminderHoursBefore, setReminderHoursBefore] = useState<number | null>(null)
   const [reminderMessage, setReminderMessage] = useState('')
   // Customização visual página pública
-  const [primaryColor, setPrimaryColor] = useState('#0f766e')
+  const [primaryColor, setPrimaryColor] = useState('#0d9488')
   const [bannerImageUrl, setBannerImageUrl] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
   const [socialInstagram, setSocialInstagram] = useState('')
   const [socialWhatsapp, setSocialWhatsapp] = useState('')
   
@@ -298,10 +299,11 @@ export default function AdminDashboard() {
       setClinicName(settings.clinic_name || '')
       setAllowCustomLinks(settings.allow_custom_links ?? false)
       setReminderHoursBefore((settings as any).reminder_hours_before ?? null)
-      setReminderMessage((settings as any).reminder_message || '')
-      setPrimaryColor((settings as any).primary_color || '#0f766e')
-      setBannerImageUrl((settings as any).banner_image_url || '')
-      setSocialInstagram((settings as any).social_instagram || '')
+      setReminderMessage(settings.reminder_message || '')
+      if (settings.primary_color) setPrimaryColor(settings.primary_color)
+      if (settings.banner_image_url) setBannerImageUrl(settings.banner_image_url)
+      if (settings.logo_url) setLogoUrl(settings.logo_url)
+      if (settings.social_instagram) setSocialInstagram(settings.social_instagram)
       setSocialWhatsapp((settings as any).social_whatsapp || '')
       try {
         if (settings.address) setAddressInfo(JSON.parse(settings.address))
@@ -568,8 +570,9 @@ export default function AdminDashboard() {
         allow_custom_links: allowCustomLinks,
         reminder_hours_before: reminderHoursBefore,
         reminder_message: reminderMessage.trim() || undefined,
-        primary_color: primaryColor || undefined,
+        primary_color: primaryColor,
         banner_image_url: bannerImageUrl.trim() || undefined,
+        logo_url: logoUrl.trim() || undefined,
         social_instagram: socialInstagram.trim() || undefined,
         social_whatsapp: socialWhatsapp.trim() || undefined,
       })
@@ -1034,20 +1037,37 @@ export default function AdminDashboard() {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link da Imagem de Capa (Banner)</label>
-                    <input 
-                      type="url" 
-                      value={bannerImageUrl} 
-                      onChange={e => setBannerImageUrl(e.target.value)} 
-                      className="input-field" 
-                      placeholder="Ex: https://meusite.com/banner.jpg" 
-                    />
-                    {bannerImageUrl && (
-                      <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-24 relative">
-                        <img src={bannerImageUrl} alt="Banner Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                      </div>
-                    )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link da Imagem de Capa (Banner)</label>
+                      <input 
+                        type="url" 
+                        value={bannerImageUrl} 
+                        onChange={e => setBannerImageUrl(e.target.value)} 
+                        className="input-field" 
+                        placeholder="Ex: https://meusite.com/banner.jpg" 
+                      />
+                      {bannerImageUrl && (
+                        <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-24 relative">
+                          <img src={bannerImageUrl} alt="Banner Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link da Imagem do Logo</label>
+                      <input 
+                        type="url" 
+                        value={logoUrl} 
+                        onChange={e => setLogoUrl(e.target.value)} 
+                        className="input-field" 
+                        placeholder="Ex: https://meusite.com/logo.png" 
+                      />
+                      {logoUrl && (
+                        <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-24 relative bg-gray-50 flex items-center justify-center">
+                          <img src={logoUrl} alt="Logo Preview" className="max-w-[80%] max-h-[80%] object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>

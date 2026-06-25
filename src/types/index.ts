@@ -96,6 +96,7 @@ export interface ClinicSettings {
   reminder_message?: string | null
   primary_color?: string | null
   banner_image_url?: string | null
+  logo_url?: string | null
   social_instagram?: string | null
   social_whatsapp?: string | null
 }
