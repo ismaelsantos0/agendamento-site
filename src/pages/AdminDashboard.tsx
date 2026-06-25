@@ -998,6 +998,10 @@ export default function AdminDashboard() {
                   <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
                 </>
               )}
+              {/* Aba WhatsApp visível para clínica também (textos e lembretes) */}
+              {role === 'clinica' && (
+                <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Mensagens & Lembretes</button>
+              )}
             </div>
 
             {/* Conteúdo das Abas */}
@@ -1287,7 +1291,10 @@ export default function AdminDashboard() {
 
             {activeSettingsTab === 'whatsapp' && (
               <div className="space-y-6 animate-fade-in bg-white p-4 rounded-xl border border-gray-200">
-            {/* Status */}
+
+            {/* Status e QR Code — apenas Master */}
+            {role === 'master' && (
+              <>
             <div className="card flex items-center justify-between border-2 border-green-500/20 shadow-green-500/5 shadow-lg">
               <div className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full ${wpStatus?.status === 'open' ? 'bg-green-500' : 'bg-red-500 animate-pulse shadow-red-500 shadow-sm'}`} />
@@ -1382,8 +1389,10 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+            </>
+            )}
 
-            {/* Mensagens Personalizadas */}
+            {/* Mensagens Personalizadas — Master e Clínica */}
             <form onSubmit={handleSaveSettings} className="card animate-fade-in space-y-4 border border-gray-200 bg-white">
               <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2"><MessageCircle className="w-4 h-4 text-primary" /> Personalização de Textos</h3>
               
