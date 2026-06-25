@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2, Link } from 'lucide-react'
+import { Calendar, LogOut, CheckCircle, XCircle, UserPlus, Clock, Settings, CalendarCheck, MessageCircle, RefreshCw, Send, User, Search, Trash2, Link, LayoutDashboard, Users, Plus, Phone, Upload } from 'lucide-react'
+import ImageCropperModal from '../components/ImageCropperModal'
 import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subDays, addWeeks, subWeeks, isSameDay, setHours, setMinutes } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
@@ -266,6 +267,37 @@ export default function AdminDashboard() {
   const [logoUrl, setLogoUrl] = useState('')
   const [socialInstagram, setSocialInstagram] = useState('')
   const [socialWhatsapp, setSocialWhatsapp] = useState('')
+
+  // Estados para o Cropper de Imagens
+  const [cropModalOpen, setCropModalOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState('')
+  const [cropTarget, setCropTarget] = useState<'banner' | 'logo' | null>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, target: 'banner' | 'logo') => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+      const reader = new FileReader()
+      reader.addEventListener('load', () => {
+        setCropImageSrc(reader.result?.toString() || '')
+        setCropTarget(target)
+        setCropModalOpen(true)
+      })
+      reader.readAsDataURL(file)
+      // Limpar input para permitir selecionar a mesma foto novamente se necessário
+      e.target.value = ''
+    }
+  }
+
+  const handleCropComplete = (croppedBase64: string) => {
+    if (cropTarget === 'banner') {
+      setBannerImageUrl(croppedBase64)
+    } else if (cropTarget === 'logo') {
+      setLogoUrl(croppedBase64)
+    }
+    setCropModalOpen(false)
+    setCropImageSrc('')
+    setCropTarget(null)
+  }
   
   const defaultAddress: AddressInfo = { cep: '', street: '', number: '', neighborhood: '', city: '', state: '', mapsLink: '' }
   const [addressInfo, setAddressInfo] = useState<AddressInfo>(defaultAddress)
@@ -1039,14 +1071,21 @@ export default function AdminDashboard() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link da Imagem de Capa (Banner)</label>
-                      <input 
-                        type="url" 
-                        value={bannerImageUrl} 
-                        onChange={e => setBannerImageUrl(e.target.value)} 
-                        className="input-field" 
-                        placeholder="Ex: https://meusite.com/banner.jpg" 
-                      />
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Capa (Banner)</label>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-slate-50 hover:border-teal-400 transition-colors">
+                          <Upload className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm font-semibold text-gray-600">Fazer Upload</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'banner')} />
+                        </label>
+                        <input 
+                          type="url" 
+                          value={bannerImageUrl} 
+                          onChange={e => setBannerImageUrl(e.target.value)} 
+                          className="input-field text-xs text-gray-400" 
+                          placeholder="Ou cole um link direto da imagem" 
+                        />
+                      </div>
                       {bannerImageUrl && (
                         <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-24 relative">
                           <img src={bannerImageUrl} alt="Banner Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
@@ -1054,14 +1093,21 @@ export default function AdminDashboard() {
                       )}
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Link da Imagem do Logo</label>
-                      <input 
-                        type="url" 
-                        value={logoUrl} 
-                        onChange={e => setLogoUrl(e.target.value)} 
-                        className="input-field" 
-                        placeholder="Ex: https://meusite.com/logo.png" 
-                      />
+                      <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Logo da Clínica</label>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:bg-slate-50 hover:border-teal-400 transition-colors">
+                          <Upload className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm font-semibold text-gray-600">Fazer Upload</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'logo')} />
+                        </label>
+                        <input 
+                          type="url" 
+                          value={logoUrl} 
+                          onChange={e => setLogoUrl(e.target.value)} 
+                          className="input-field text-xs text-gray-400" 
+                          placeholder="Ou cole um link direto da imagem" 
+                        />
+                      </div>
                       {logoUrl && (
                         <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-24 relative bg-gray-50 flex items-center justify-center">
                           <img src={logoUrl} alt="Logo Preview" className="max-w-[80%] max-h-[80%] object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
@@ -2927,6 +2973,18 @@ function UsersTabContent() {
           {users.length === 0 && <p className="text-sm text-gray-500">Nenhum usuário cadastrado.</p>}
         </div>
       </div>
+      
+      {/* Modal Image Cropper */}
+      {cropModalOpen && cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          aspectRatio={cropTarget === 'banner' ? 3 / 1 : 1 / 1}
+          title={cropTarget === 'banner' ? 'Recortar Capa (Banner)' : 'Recortar Logo'}
+          maxOutputWidth={cropTarget === 'banner' ? 1200 : 400}
+          onClose={() => { setCropModalOpen(false); setCropImageSrc(''); setCropTarget(null); }}
+          onCropComplete={handleCropComplete}
+        />
+      )}
     </div>
   )
 }
