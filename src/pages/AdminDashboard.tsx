@@ -6,6 +6,7 @@ import { format, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOf
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import LoginPage from './LoginPage'
+import { OnboardingTour } from '../components/OnboardingTour'
 import { Appointment, AddressInfo, WeeklySchedule, ServiceItem } from '../types'
 import { 
   useAppointments, 
@@ -661,6 +662,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <OnboardingTour
+        clinicName={clinicName}
+        addressInfo={addressInfo}
+        activeSettingsTab={activeSettingsTab}
+      />
       <header className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-teal-600 text-white pt-10 pb-8 px-6 rounded-b-[2.5rem] shadow-lg">
         {/* Abstract Background Elements */}
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl pointer-events-none"></div>
@@ -1044,7 +1050,7 @@ export default function AdminDashboard() {
               <button onClick={() => setActiveSettingsTab('company')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'company' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Dados da Empresa</button>
               {(role === 'master' || role === 'clinica') && (
                 <>
-                  <button onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
+                  <button id="tour-services-tab-btn" onClick={() => setActiveSettingsTab('services')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'services' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Serviços</button>
                   <button onClick={() => setActiveSettingsTab('appearance')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'appearance' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Aparência</button>
                   <button onClick={() => setActiveSettingsTab('whatsapp')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${activeSettingsTab === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>WhatsApp & Mensagens</button>
                 </>
@@ -1197,7 +1203,7 @@ export default function AdminDashboard() {
                 <fieldset disabled={role !== 'master' && role !== 'clinica'} className="space-y-6">
                 <div>
                   <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">Nome da Clínica / Empresa</label>
-                  <input className="input-field" value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Ex: Clínica Saúde Ideal" />
+                  <input id="tour-clinic-name" className="input-field" value={clinicName} onChange={e => setClinicName(e.target.value)} placeholder="Ex: Clínica Saúde Ideal" />
                 </div>
 
                 <div className="pt-4 border-t border-gray-100">
@@ -1205,7 +1211,7 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                     <div className="relative">
                       <label className="text-[10px] uppercase font-bold text-gray-400 ml-1 mb-1 block">CEP</label>
-                      <input className="input-field" value={addressInfo.cep} onChange={e => setAddressInfo({...addressInfo, cep: e.target.value})} onBlur={buscarCep} placeholder="00000-000" maxLength={9} />
+                      <input id="tour-clinic-address" className="input-field" value={addressInfo.cep} onChange={e => setAddressInfo({...addressInfo, cep: e.target.value})} onBlur={buscarCep} placeholder="00000-000" maxLength={9} />
                       {cepLoading && <span className="absolute right-3 top-[26px] text-xs text-primary animate-pulse">Buscando...</span>}
                     </div>
                     <div className="md:col-span-2">
@@ -1282,7 +1288,7 @@ export default function AdminDashboard() {
             )}
             
             {activeSettingsTab === 'services' && (
-              <div className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">
+              <div id="tour-services-form" className="space-y-6 animate-fade-in bg-white p-5 rounded-2xl border border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="font-bold text-gray-800 text-sm">Serviços Oferecidos</h3>
                   <button 
@@ -1437,11 +1443,11 @@ export default function AdminDashboard() {
                   </div>
                 )}
                 <div className="pt-2">
-                  <button onClick={handleSaveServices} disabled={syncServices.isPending} className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
+                  <button id="tour-save-services-btn" onClick={handleSaveServices} disabled={syncServices.isPending} className="btn-primary w-full sm:w-auto py-3 text-sm shadow-md">
                     {syncServices.isPending ? 'Salvando...' : 'Salvar Serviços'}
                   </button>
                 </div>
-                <div className="mt-8 pt-6 border-t border-gray-200">
+                <div id="tour-scheduling-rules" className="mt-8 pt-6 border-t border-gray-200">
                   <h3 className="font-bold text-gray-800 text-sm mb-4">Regras de Agendamento</h3>
                   <form onSubmit={handleSaveSettings} className="space-y-4">
                     <div>
