@@ -277,7 +277,6 @@ export default function SchedulingPage() {
                 </p>
               </div>
             </div>
-            </div>
             
             {/* Redes Sociais */}
             <div className="flex items-center gap-3">
