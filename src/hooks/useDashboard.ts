@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/axios';
+import { api } from '../api/client';
 
 export interface DashboardMetrics {
   total_current_month: number;
